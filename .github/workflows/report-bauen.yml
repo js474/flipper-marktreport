@@ -5,7 +5,7 @@ name: Report bauen und ausliefern
 on:
   push:
     branches: [main]
-    paths: ['data/snapshots/**', 'pipeline/report/**']
+    paths: ['data/snapshots/**', 'pipeline/**', '.github/workflows/report-bauen.yml']
   workflow_dispatch:
     inputs:
       monat: { description: 'Monat YYYY-MM (leer = neuester Snapshot)', required: false }
