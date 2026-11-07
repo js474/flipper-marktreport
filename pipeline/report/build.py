@@ -369,7 +369,7 @@ def btab(a, b, la, lb):
            (f'Monatsrate ({de(bz,2)} % Zins, {de(tilg,2)} % Tilgung)', a['rate'], b['rate'])]
     body = ''.join(f'<tr><td class="c">{k}</td><td>{de(x)} €</td><td>{de(y)} €</td></tr>' for k, x, y in rws)
     return f'<table class="t"><thead><tr><th>Position</th><th>{la}</th><th>{lb}</th></tr></thead><tbody>{body}</tbody></table>'
-s2 = f'''<section class="sec brk"><h2>2 · Zwei Seiten der Finanzierung: Flipper und Käufer</h2>
+s2 = f'''<section class="sec"><h2>2 · Zwei Seiten der Finanzierung: Flipper und Käufer</h2>
 <p class="intro">Seite A rechnet eine Projektfinanzierung mit variablem Unternehmenskredit, Seite B eine Eigennutzer-Finanzierung mit 10 Jahren Zinsbindung. Die Annahmen stehen unter der jeweiligen Tabelle.</p>
 {block('Seite A: Was der Flipper finanziert (Rechenbeispiel Wohnung)', ftab(flip_by, flip_nw, 'Bayern (3,5 % GrESt)', 'NRW (6,5 % GrESt)'))}
 {src(f'Annahmen: Kaufpreis {de(FX["kauf"])} €, {FX["qm"]} m², Sanierung {de(FX["san_qm"])} € je m², Haltedauer {FX["monate"]} Monate, Zins wie Bundesbank-Durchschnitt für variable Unternehmenskredite bis 1 Mio. € (Sep 2026 bzw. Sep 2025). Individuelle Konditionen liegen bei Projektfinanzierungen oft darüber.')}
