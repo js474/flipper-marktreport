@@ -16,7 +16,7 @@ jobs:
         run: |
           set -e
           echo "::notice::URL gesetzt: ${#UPLOAD_URL} Zeichen, Secret gesetzt: ${#UPLOAD_SECRET} Zeichen"
-          FILE=$(ls ausgaben/Fix-und-Flip-Marktreport-*.pdf | sort | tail -1)
+          FILE=$(ls ausgaben/Immobilienhandel-Marktreport-*.pdf | sort | tail -1)
           NAME=$(basename "$FILE")
           python3 - "$FILE" "$NAME" > payload.json << 'PY'
           import base64, json, sys

@@ -240,7 +240,7 @@ def cite(name, detail, url):
 cover = f'''<section class="cover-page">
 <div class="cover"><img class="clogo" src="data:image/png;base64,{LOGO_W}"/>
 <div class="kicker">Ausgabe 01 · Stand 7. November 2026</div>
-<h1>Fix &amp; Flip Marktreport</h1>
+<h1>Immobilienhandel-Marktreport</h1><div class="sub">Fix-und-Flip · Ausgabe November 2026</div>
 <p class="lead">Zinsen, Finanzierung, Preise, Angebotsdaten aus {len(rows)} Städten, Baukosten, Zielgruppe und Demografie. Zusammengeführt aus {de(n_total)} aktiven Wohnungsinseraten der Leverage-Datenbank und über 30 amtlichen und institutionellen Quellen.</p></div>
 <h2 class="first">Die Lage in sechs Zahlen</h2>
 {kpis(
@@ -255,12 +255,12 @@ cover = f'''<section class="cover-page">
  cols=3)}
 <h2>Kurzfassung</h2>
 <ul class="sum">
-<li><b>Der Käufer am Ende hat weniger Budget.</b> Bei gleicher Monatsrate wie vor einem Jahr finanziert ein Haushalt heute {de(abs(kaufkraft),1)} % weniger Darlehen. Ein Haushalt mit Medianeinkommen ({de(ek_med)} € netto) kommt bei 35 % Belastung auf rund {de(darl_med,-3)} € Darlehen, der durchschnittliche Baufinanzierungskredit liegt bei {de(F['dtb']['darlehen'],-3)} €.</li>
-<li><b>Kurzfristiges Geld ist teurer als langfristiges.</b> Variable Wohnungsbaukredite kosten {de(F['mfi_wohnen']['sep26']['var'],2)} %, zehnjährige {de(F['mfi_wohnen']['sep26']['j10'],2)} %. Für die Projektfinanzierung des Flips ist das der teuerste Teil der Zinskurve.</li>
-<li><b>Kaufpreise geben nach, Mieten steigen.</b> Wohnungen sind nominal {de(abs(P['greix']['etw_yoy']),1)} % günstiger als vor einem Jahr, Angebotsmieten {de(G['mieten']['greix_yoy'],1)} % teurer. Das verbessert die Rendite für Kapitalanleger als Käufer.</li>
-<li><b>Sanierung kostet {de(P['baupreise']['instand_yoy'],1)} % mehr.</b> Die Marge muss beim Einkauf entstehen.</li>
-<li><b>Die Flip-Spanne ist regional sehr unterschiedlich.</b> Zwischen sanierungsbedürftigen Wohnungen und Bestand der Baujahre 1995 bis 2020 liegen je nach Stadt {de(min(r['spread'] for r in robust))} bis {de(max(r['spread'] for r in robust))} € je m².</li>
-<li><b>Die Erbengeneration verkauft.</b> 2025 wurden steuerlich {de(G['erbe']['grundvermoegen'],1)} Mrd. € Grundvermögen übertragen, {sg(G['erbe']['grund_yoy'])} % mehr als im Vorjahr. Bis 2039 erreichen {de(G['boomer']['erwerbspersonen_rente_bis_2039'],1)} Mio. Erwerbspersonen das Rentenalter.</li>
+<li>Der Käufer am Ende hat weniger Budget. Bei gleicher Monatsrate wie vor einem Jahr finanziert ein Haushalt heute {de(abs(kaufkraft),1)} % weniger Darlehen. Ein Haushalt mit Medianeinkommen ({de(ek_med)} € netto) kommt bei 35 % Belastung auf rund {de(darl_med,-3)} € Darlehen, der durchschnittliche Baufinanzierungskredit liegt bei {de(F['dtb']['darlehen'],-3)} €.</li>
+<li>Kurzfristiges Geld ist teurer als langfristiges. Variable Wohnungsbaukredite kosten {de(F['mfi_wohnen']['sep26']['var'],2)} %, zehnjährige {de(F['mfi_wohnen']['sep26']['j10'],2)} %. Für die Projektfinanzierung des Flips ist das der teuerste Teil der Zinskurve.</li>
+<li>Kaufpreise geben nach, Mieten steigen. Wohnungen sind nominal {de(abs(P['greix']['etw_yoy']),1)} % günstiger als vor einem Jahr, Angebotsmieten {de(G['mieten']['greix_yoy'],1)} % teurer. Das verbessert die Rendite für Kapitalanleger als Käufer.</li>
+<li>Sanierung kostet {de(P['baupreise']['instand_yoy'],1)} % mehr. Gleichzeitig sinken die Wohnungspreise, die Marge hängt damit stärker am Einkaufspreis.</li>
+<li>Die Flip-Spanne ist regional sehr unterschiedlich. Zwischen sanierungsbedürftigen Wohnungen und Bestand der Baujahre 1995 bis 2020 liegen je nach Stadt {de(min(r['spread'] for r in robust))} bis {de(max(r['spread'] for r in robust))} € je m².</li>
+<li>Die Erbengeneration verkauft. 2025 wurden steuerlich {de(G['erbe']['grundvermoegen'],1)} Mrd. € Grundvermögen übertragen, {sg(G['erbe']['grund_yoy'])} % mehr als im Vorjahr. Bis 2039 erreichen {de(G['boomer']['erwerbspersonen_rente_bis_2039'],1)} Mio. Erwerbspersonen das Rentenalter.</li>
 </ul>
 <div class="toc avoid"><h3>Inhalt</h3><ol>
 <li>Zinsen und Finanzierungsumfeld</li><li>Zwei Seiten der Finanzierung: Flipper und Käufer</li><li>Kaufnebenkosten und Förderung</li>
@@ -276,7 +276,7 @@ cite('Deutsche Bundesbank', 'MFI-Zinsstatistik, Kredite an nichtfinanzielle Kapi
 cite('Deutsche Bundesbank', 'Geldmarktsätze, Euribor (Quelle EMMI), Stand 06.11.2026', F['euribor']['url'])
 cite('Europäische Zentralbank', 'Geldpolitische Beschlüsse vom 29.10.2026', P['ezb']['url'])
 s1 = f'''<section class="sec brk"><h2>1 · Zinsen und Finanzierungsumfeld</h2>
-<p class="intro">Der Zins entscheidet zweimal über den Flip: bei der eigenen Projektfinanzierung und beim Budget des Käufers. Beide hängen an unterschiedlichen Enden der Zinskurve.</p>
+<p class="intro">Variable Zinsen bestimmen die Kosten der Projektfinanzierung, Zinsen mit 10 Jahren Bindung das Budget der Käuferinnen und Käufer.</p>
 {kpis(kpi(de(bz,2)+' %','Bauzins über 10 Jahre','Sep 2026, Bundesbank'),
       kpi(de(mw['var'],2)+' %','Wohnungsbaukredit variabel','bis 1 Jahr Zinsbindung, Sep 2026'),
       kpi(de(F['mfi_unternehmen']['bis1mio_var_sep26'],2)+' %','Unternehmenskredit variabel','bis 1 Mio. €, Sep 2026'), cols=3)}
@@ -287,7 +287,7 @@ s1 = f'''<section class="sec brk"><h2>1 · Zinsen und Finanzierungsumfeld</h2>
 {src('Quelle: Deutsche Bundesbank, MFI-Zinsstatistik, Neugeschäft, Effektivzinssatz.')}
 {block('Bauzins über 10 Jahre im Verlauf', line_chart([('Okt 25',P['bauzins']['okt25']),('Jan 26',P['bauzins']['jan26']),('Jul 26',P['bauzins']['jul26']),('Aug 26',P['bauzins']['aug26']),('Sep 26',P['bauzins']['sep26'])], 3.6, 4.4))}
 {src('Quelle: Deutsche Bundesbank. Ausgewiesene Monate, keine durchgehende Reihe.')}
-{note(f'Der 3-Monats-Euribor, an dem variable Darlehen und viele Projektfinanzierungen hängen, liegt bei {de(F["euribor"]["m3"],2)} % nach {de(F["euribor"]["m3_nov25"],2)} % im Durchschnitt November 2025. Das sind {de(F["euribor"]["m3"]-F["euribor"]["m3_nov25"],2)} Prozentpunkte mehr. Die EZB hat den Einlagesatz am 10.09.2026 auf {de(P["ezb"]["einlage"],2)} % erhöht. Variable Wohnungsbaukredite sind mit {de(mw["var"],2)} % teurer als Kredite mit 5 bis 10 Jahren Bindung ({de(mw["j5_10"],2)} %). Für Flipper heißt das: Kurze Haltedauer zahlt sich doppelt aus, weil jeder Monat Projektlaufzeit zum teuersten Satz finanziert wird.')}
+{note(f'Der 3-Monats-Euribor, an dem variable Darlehen und viele Projektfinanzierungen hängen, liegt bei {de(F["euribor"]["m3"],2)} % nach {de(F["euribor"]["m3_nov25"],2)} % im Durchschnitt November 2025. Das sind {de(F["euribor"]["m3"]-F["euribor"]["m3_nov25"],2)} Prozentpunkte mehr. Die EZB hat den Einlagesatz am 10.09.2026 auf {de(P["ezb"]["einlage"],2)} % erhöht. Variable Wohnungsbaukredite sind mit {de(mw["var"],2)} % teurer als Kredite mit 5 bis 10 Jahren Bindung ({de(mw["j5_10"],2)} %). Jeder Monat Projektlaufzeit läuft damit zum höchsten Satz der Zinskurve.')}
 {block('Kreditvergabe der Banken (Bank Lending Survey, Q3 2026)', f'<p>Die Banken haben ihre Kreditstandards für private Wohnungsbaukredite im dritten Quartal leicht gelockert (Nettoanteil {de(F["bls"]["standards_q3"])} %, nach {sg(F["bls"]["standards_q2"],0)} % im Vorquartal). Die Nachfrage ist das zweite Quartal in Folge deutlich gesunken, die Ablehnungsraten sind weiter gestiegen. Für das vierte Quartal erwarten die Banken unveränderte Standards und einen weiter sinkenden Finanzierungsbedarf.</p>')}
 {src('Quelle: Deutsche Bundesbank, Bank Lending Survey, veröffentlicht 27.10.2026.')}
 </section>'''
@@ -314,7 +314,7 @@ def btab(a, b, la, lb):
     body = ''.join(f'<tr><td class="c">{k}</td><td>{de(x)} €</td><td>{de(y)} €</td></tr>' for k, x, y in rws)
     return f'<table class="t"><thead><tr><th>Position</th><th>{la}</th><th>{lb}</th></tr></thead><tbody>{body}</tbody></table>'
 s2 = f'''<section class="sec"><h2>2 · Zwei Seiten der Finanzierung: Flipper und Käufer</h2>
-<p class="intro">Der Flipper finanziert kurz und variabel, der Käufer lang und fest. Beide Rechnungen gehören in jede Kalkulation, weil der Verkaufspreis davon abhängt, was der Käufer finanzieren kann.</p>
+<p class="intro">Seite A rechnet eine Projektfinanzierung mit variablem Unternehmenskredit, Seite B eine Eigennutzer-Finanzierung mit 10 Jahren Zinsbindung. Die Annahmen stehen unter der jeweiligen Tabelle.</p>
 {block('Seite A: Was der Flipper finanziert (Rechenbeispiel Wohnung)', ftab(flip_by, flip_nw, 'Bayern (3,5 % GrESt)', 'NRW (6,5 % GrESt)'))}
 {src(f'Annahmen: Kaufpreis {de(FX["kauf"])} €, {FX["qm"]} m², Sanierung {de(FX["san_qm"])} € je m², Haltedauer {FX["monate"]} Monate, Zins wie Bundesbank-Durchschnitt für variable Unternehmenskredite bis 1 Mio. € (Sep 2026 bzw. Sep 2025). Individuelle Konditionen liegen bei Projektfinanzierungen oft darüber.')}
 {note(f'Die Zinskosten des Projekts sind binnen eines Jahres um rund {de(flip_by["zins"]-flip_by["zins_vj"],-1)} € gestiegen. Jeder zusätzliche Monat Haltedauer kostet im Beispiel rund {de(flip_by["zins"]/FX["monate"])} €. Zwischen Bayern und NRW liegen allein bei der Grunderwerbsteuer {de(flip_nw["nk"]-flip_by["nk"])} € Unterschied, die vor Verkauf als Eigenkapital gebunden sind.')}
@@ -324,7 +324,7 @@ s2 = f'''<section class="sec"><h2>2 · Zwei Seiten der Finanzierung: Flipper und
       kpi(de(F['dtb']['beleihung'],1)+' %','Ø Beleihungsauslauf','Dr. Klein, Mai bis Aug 2026'),
       kpi(de(F['dtb']['tilgung'],2)+' %','Ø anfängliche Tilgung', F['dtb']['zinsbindung']+' Zinsbindung'), cols=3)}
 {block('Was sich verändert hat', f'<table class="t"><thead><tr><th></th><th>Sep 2025</th><th>Sep 2026</th><th>Differenz</th></tr></thead><tbody><tr><td class="c">Monatsrate für {de(darl)} € Darlehen</td><td>{de(rate_vj,2)} €</td><td>{de(rate_now,2)} €</td><td class="b neg">{sg(rate_now-rate_vj,2)} €</td></tr><tr><td class="c">Darlehen bei Rate von {de(rate_vj,2)} €</td><td>{de(darl)} €</td><td>{de(darl_gleich)} €</td><td class="b neg">{sg(darl_gleich-darl)} €</td></tr></tbody></table>')}
-{note(f'Ein Käufer braucht im Beispiel {de(buy_by["ek"])} € (Bayern) bis {de(buy_nw["ek"])} € (NRW) eigenes Geld. Wer heute dieselbe Rate wie vor einem Jahr tragen kann, bekommt {de(abs(kaufkraft),1)} % weniger Darlehen. Den Verkaufspreis deshalb mit aktuellen Zinsen gegenrechnen und nicht mit Vergleichspreisen aus 2025.')}
+{note(f'Ein Käufer braucht im Beispiel {de(buy_by["ek"])} € (Bayern) bis {de(buy_nw["ek"])} € (NRW) eigenes Geld. Wer heute dieselbe Rate wie vor einem Jahr tragen kann, bekommt {de(abs(kaufkraft),1)} % weniger Darlehen. Vergleichspreise aus 2025 überschätzen deshalb das heutige Käuferbudget.')}
 </section>'''
 
 # ---------- 3 Nebenkosten / Förderung ----------
@@ -335,7 +335,7 @@ gr = sorted([(k, v) for k, v in F['grest'].items() if k not in ('quelle', 'url')
 s3 = f'''<section class="sec"><h2>3 · Kaufnebenkosten und Förderung</h2>
 {block('Grunderwerbsteuer nach Bundesland, 2026', bars(gr, ' %', dec=1, signed=False, lab=200, rowh=26))}
 {src('Quelle: ImmoScout24, Medieninformation vom 07.05.2026. Notar und Grundbuch zusätzlich rund 1 bis 1,5 % des Kaufpreises (Verbraucherzentrale).')}
-{note(f'Beim Flip fällt die Grunderwerbsteuer zweimal an: beim eigenen Einkauf und beim Käufer, dessen Budget sie schmälert. Auf {de(FX["kauf"])} € Kaufpreis sind das zwischen {de(FX["kauf"]*gr[-1][1]/100)} € ({gr[-1][0]}) und {de(FX["kauf"]*gr[0][1]/100)} € ({", ".join(k for k,v in gr if v==gr[0][1])}).')}
+{note(f'Beim Flip fällt die Grunderwerbsteuer zweimal an, beim eigenen Einkauf und beim Käufer, dessen Budget sie schmälert. Auf {de(FX["kauf"])} € Kaufpreis sind das zwischen {de(FX["kauf"]*gr[-1][1]/100)} € ({gr[-1][0]}) und {de(FX["kauf"]*gr[0][1]/100)} € ({", ".join(k for k,v in gr if v==gr[0][1])}).')}
 {block('KfW-Förderung für Käufer von Bestandsimmobilien', f"""<table class="t"><tbody>
 <tr><td class="c">Wohneigentum für Familien, Bestandserwerb (308, „Jung kauft Alt“)</td><td>Kredit {F['kfw308']['betrag']}; Einkommensgrenze {F['kfw308']['einkommen']}; nur für Gebäude der Energieklasse {F['kfw308']['energieklasse']}; Sanierung auf {F['kfw308']['sanierung']}.</td></tr>
 <tr><td class="c">BEG Wohngebäude Kredit (261)</td><td>Kredit {F['kfw261']['betrag']}; {F['kfw261']['zuschuss']}.</td></tr></tbody></table>""")}
@@ -364,7 +364,7 @@ s4 = f'''<section class="sec"><h2>4 · Preise und Mieten</h2>
 {src('Quelle: Destatis, Häuserpreisindex, Pressemitteilung Nr. 336 vom 24.09.2026.')}
 {block('Angebotsmieten nach Großstadt, Veränderung zum Vorjahr (GREIX Q3 2026)', bars(sorted(G['mieten']['staedte'].items(), key=lambda x: -x[1])))}
 {src('Quelle: GREIX-Mietpreisindex, Kiel Institut, Meldung vom 15.10.2026, abgerufen über epd. Angebotsmieten, keine Bestandsmieten.')}
-{note(f'Kaufpreise und Mieten laufen auseinander: Wohnungen nominal {sg(P["greix"]["etw_yoy"])} %, Angebotsmieten {sg(G["mieten"]["greix_yoy"])} %. Das hebt die Bruttorendite und macht Kapitalanleger als Käufer wieder interessanter, vor allem in Märkten mit starkem Mietanstieg wie Hamburg, Düsseldorf und Köln. Kreisfreie Großstädte außerhalb der Metropolen legen bei Wohnungspreisen zu ({sg(hpi["Kreisfreie Großstädte außerhalb der Metropolen"])} %), dicht besiedelte ländliche Kreise verlieren ({sg(hpi["Dicht besiedelte ländliche Kreise"])} %).')}
+{note(f'Wohnungen nominal {sg(P["greix"]["etw_yoy"])} %, Angebotsmieten {sg(G["mieten"]["greix_yoy"])} %. Die Bruttorendite für Kapitalanleger steigt dadurch, am stärksten in Hamburg, Düsseldorf und Köln. Kreisfreie Großstädte außerhalb der Metropolen legen bei Wohnungspreisen zu ({sg(hpi["Kreisfreie Großstädte außerhalb der Metropolen"])} %), dicht besiedelte ländliche Kreise verlieren ({sg(hpi["Dicht besiedelte ländliche Kreise"])} %).')}
 </section>'''
 
 # ---------- 5 Angebotsmarkt ----------
@@ -393,26 +393,26 @@ s5 = f'''<section class="sec brk"><h2>5 · Angebotsmarkt Deutschland: {len(rows)
 <div class="block avoid"><h3>Bruttomietrendite (Median), %</h3><div class="mapw">{de_map(rows,'rend',lambda v: de(v,1)+" %",'Bruttorendite',rend_breaks)}</div></div>
 {src('Bruttorendite: Leverage-Mietschätzung (Jahreskaltmiete) geteilt durch Angebotspreis, Median der Inserate mit Bewertung.')}
 <div class="block"><h3>Alle Städte im Überblick (sortiert nach Preis je m²)</h3>{city_table(rows)}</div>
-{src('Spread: Median Baujahr 1995 bis 2020 minus Median sanierungsbedürftig, nur wo beide Werte vorliegen (mindestens 5 Inserate). ⚠ = unter 10 Inserate, Wert schwankt stärker. Angebot ggü. Marktwert: positiv = teurer angeboten als Leverage-Bewertung. Radius 5 km, in sehr großen Märkten 2 bis 3 km (Kernstadt). Angebotspreise sind keine Kaufpreise.')}
+{src('Spread: Median Baujahr 1995 bis 2020 minus Median sanierungsbedürftig, nur wo beide Werte vorliegen (mindestens 5 Inserate). ⚠ = unter 10 Inserate, Wert schwankt stärker. Angebot ggü. Marktwert: Positiver Wert heißt teurer angeboten als die Leverage-Bewertung. Radius 5 km, in sehr großen Märkten 2 bis 3 km (Kernstadt). Angebotspreise sind keine Kaufpreise.')}
 {block('Größte Flip-Spanne je m² (mindestens 8 Inserate je Gruppe)', bars([(r['c'], r['spread']) for r in top_spread[:12]], ' €', dec=0, signed=False, lab=200))}
 {block('Höchste Bruttomietrenditen (Median)', bars([(r['c'], r['rend']) for r in top_rend[:12]], ' %', dec=2, signed=False, lab=200, vmin=0))}
-{note(f'Die größten Spannen zwischen sanierungsbedürftigem und gutem Bestand finden sich in {", ".join(r["c"] for r in top_spread[:3])}. Die höchsten Renditen liegen in ostdeutschen Märkten mit niedrigen Preisen je m² wie {", ".join(r["c"] for r in top_rend[:3])}. Dort sind die Inseratszahlen allerdings klein und die Nachfrage durch Abwanderung belastet. In {over_mw} von {len(rows)} Städten liegt der Median der Angebote über der Leverage-Bewertung. Der Verhandlungsspielraum ist also da.')}
+{note(f'Die größten Spannen zwischen sanierungsbedürftigem und gutem Bestand finden sich in {", ".join(r["c"] for r in top_spread[:3])}. Die höchsten Renditen liegen in ostdeutschen Märkten mit niedrigen Preisen je m² wie {", ".join(r["c"] for r in top_rend[:3])}. Dort sind die Inseratszahlen allerdings klein und die Nachfrage durch Abwanderung belastet. In {over_mw} von {len(rows)} Städten liegt der Median der Angebote über der Leverage-Bewertung. Dort lohnt die Preisverhandlung mit dem Bewertungsergebnis in der Hand.')}
 </section>'''
 
 # ---------- 6 Leistbarkeit ----------
 leist = sorted(rows, key=lambda r: -r['leist_qm'])
 s6 = f'''<section class="sec"><h2>6 · Leistbarkeit: Was sich der Käufer leisten kann</h2>
-<p class="intro">Ein Flip ist nur so gut wie sein Exit. Die Frage ist deshalb nicht, was die Wohnung wert ist, sondern wie viel Wohnung ein typischer Haushalt finanzieren kann.</p>
+<p class="intro">Der erzielbare Verkaufspreis hängt am Darlehen, das ein typischer Haushalt bekommt. Die Rechnung geht vom Median-Haushaltsnettoeinkommen aus.</p>
 {kpis(kpi(de(ek_med)+' €','Median-Haushaltsnettoeinkommen','pro Monat, EU-SILC 2025'),
       kpi(de(rate_med)+' €','Rate bei 35 % Belastung','Annahme für die Rechnung'),
       kpi(de(darl_med,-3)+' €','Darlehen daraus',f'{de(bz,2)} % Zins, {de(tilg,2)} % Tilgung'), cols=3)}
 {block('Wie viele m² ein Median-Haushalt allein mit Darlehen finanzieren kann', bars([(r['c'], r['leist_qm']) for r in leist[:12]] + [(r['c'], r['leist_qm']) for r in leist[-8:]], ' m²', dec=0, signed=False, lab=200, rowh=24))}
 {src(f'Rechnung: Darlehen von {de(darl_med,-3)} € geteilt durch Median-Angebotspreis je m² der Stadt. Ohne Eigenkapital und Kaufnebenkosten. Oben die 12 günstigsten, unten die 8 teuersten Märkte der Auswertung. Zum Vergleich: Eine durchschnittliche Wohnung in Deutschland hat {de(Z["flaeche"]["je_wohnung"],1)} m².')}
-{note(f'Ein Haushalt mit Medianeinkommen finanziert in München rund {de(S["München"]["qm"] and darl_med/S["München"]["qm"])} m², in Leipzig rund {de(darl_med/S["Leipzig"]["qm"])} m². Vor einem Jahr wären es bei gleicher Rate {de((darl_med_vj/darl_med-1)*100,1)} % mehr gewesen. Für Flipper in teuren Märkten heißt das: Kleine Wohnungen mit 1 bis 2 Zimmern treffen die zahlungsfähige Nachfrage besser als große Einheiten. In günstigen Märkten reicht das Budget für Familienwohnungen.')}
+{note(f'Ein Haushalt mit Medianeinkommen finanziert in München rund {de(S["München"]["qm"] and darl_med/S["München"]["qm"])} m², in Leipzig rund {de(darl_med/S["Leipzig"]["qm"])} m². Vor einem Jahr wären es bei gleicher Rate {de((darl_med_vj/darl_med-1)*100,1)} % mehr gewesen. In teuren Märkten erreichen deshalb Wohnungen mit 1 bis 2 Zimmern die meisten zahlungsfähigen Haushalte. In günstigen Märkten reicht das Budget für Familienwohnungen.')}
 {block('Wohnkostenbelastung der Haushalte', bars([('Alle Haushalte 2025',Z['wohnkosten']['anteil25']),('Alleinlebende',Z['wohnkosten']['allein']),('Alleinerziehende',Z['wohnkosten']['alleinerz']),('Mieterhaushalte 2022 (Bruttokaltmiete)',Z['mietbelastung']['schnitt'])], ' %', signed=False, lab=280, vmin=0))}
 {src('Quellen: Destatis, Anteil der Wohnkosten am verfügbaren Haushaltseinkommen (EU-SILC 2025); Mietbelastungsquote Mikrozensus 2022.')}
 {block('Mietbelastung nach Haushaltsnettoeinkommen (Mikrozensus 2022)', bars(list(Z['mietbelastung']['nach_einkommen'].items()), ' %', signed=False, lab=200, vmin=0))}
-{note(f'Im Schnitt geben Haushalte {de(Z["wohnkosten"]["anteil25"],1)} % ihres verfügbaren Einkommens für Wohnen aus, {de(Z["wohnkosten"]["ueber40_25"],1)} % der Bevölkerung mehr als 40 %. Mieterhaushalte mit unter 1.500 € Einkommen zahlen {de(Z["mietbelastung"]["nach_einkommen"]["unter 1.500 €"],1)} %. Wer an Eigennutzer verkauft, verkauft an die obere Einkommenshälfte. Wer an Kapitalanleger verkauft, sollte die Miete so ansetzen, dass sie im Zielquartier tragbar bleibt.')}
+{note(f'Im Schnitt geben Haushalte {de(Z["wohnkosten"]["anteil25"],1)} % ihres verfügbaren Einkommens für Wohnen aus, {de(Z["wohnkosten"]["ueber40_25"],1)} % der Bevölkerung mehr als 40 %. Mieterhaushalte mit unter 1.500 € Einkommen zahlen {de(Z["mietbelastung"]["nach_einkommen"]["unter 1.500 €"],1)} %. Eigennutzer als Käufer kommen damit überwiegend aus der oberen Einkommenshälfte. Bei Verkauf an Kapitalanleger sollte die angesetzte Miete im Zielquartier tragbar bleiben.')}
 </section>'''
 cite('Statistisches Bundesamt', 'Einkommen und Einkommensverteilung, EU-SILC 2025, Tabellenstand 09.04.2026', Z['einkommen']['url'])
 cite('Statistisches Bundesamt', 'Anteil der Wohnkosten am verfügbaren Haushaltseinkommen, Tabellenstand 09.04.2026', Z['wohnkosten']['url'])
@@ -475,7 +475,7 @@ cite('Statistisches Bundesamt', 'Bevölkerung 2025, PM Nr. 203 vom 16.06.2026', 
 cite('Argetra GmbH', 'Jahresbericht Zwangsversteigerungen 2025, Januar 2026', G['zv']['url'])
 binnen = sorted(list(G['binnen']['gewinner'].items()) + list(G['binnen']['verlierer'].items()), key=lambda x: -x[1])
 s9 = f'''<section class="sec"><h2>9 · Demografie, Ruhestand und Erben</h2>
-<p class="intro">Die geburtenstarken Jahrgänge 1955 bis 1969 gehen in den Ruhestand. Für den Immobilienmarkt bedeutet das mehr Verkäufe, mehr Erbschaften und mehr unsanierte Bestandsobjekte.</p>
+<p class="intro">Die geburtenstarken Jahrgänge 1955 bis 1969 gehen in den Ruhestand. Daraus folgen mehr Verkäufe und mehr Erbfälle mit unsanierten Objekten.</p>
 {kpis(kpi(de(G['boomer']['erwerbspersonen_rente_bis_2039'],1)+' Mio.','Erreichen bis 2039 das Rentenalter',f'{G["boomer"]["anteil"]} % aller Erwerbspersonen'),
       kpi(de(G['alter']['ab67_2024'],1)+' Mio.','Menschen ab 67 (2024)',f'bis 2038: {de(G["alter"]["ab67_2038_von"],1)} bis {de(G["alter"]["ab67_2038_bis"],1)} Mio.'),
       kpi(de(G['erbe']['grundvermoegen'],1)+' Mrd. €','Übertragenes Grundvermögen 2025',f'{sg(G["erbe"]["grund_yoy"])} % ggü. 2024'), cols=3)}
@@ -486,7 +486,7 @@ s9 = f'''<section class="sec"><h2>9 · Demografie, Ruhestand und Erben</h2>
 {src('Quelle: Destatis, PM Nr. 184 vom 01.06.2026. Insgesamt 996.000 Umzüge zwischen Bundesländern.')}
 {block('Bevölkerungsentwicklung 2025 nach Region', bars([('Berlin',G['bev25']['berlin']),('Hamburg',G['bev25']['hamburg']),('Westdeutschland',G['bev25']['west']),('Ostdeutschland',G['bev25']['ost']),('Sachsen-Anhalt',G['bev25']['sachsen_anhalt']),('Thüringen',G['bev25']['thueringen'])], lab=220))}
 {src('Quelle: Destatis, PM Nr. 203 vom 16.06.2026.')}
-{note(f'Die Erbschaftsteuerstatistik erfasst nur Fälle oberhalb der Freibeträge, das tatsächliche Volumen ist deutlich höher. Das DIW schätzt für 2002 bis 2017 im Schnitt {de(G["diw"]["wert"])} Mrd. € pro Jahr und hält das für eher unterschätzt. Erbimmobilien sind häufig unsaniert, die Erben wohnen oft nicht vor Ort und wollen schnell verkaufen. Das ist eine der ergiebigsten Einkaufsquellen für Flipper. Gleichzeitig verlieren Thüringen und Sachsen-Anhalt Einwohner, Brandenburg, Bayern und Schleswig-Holstein gewinnen. Hohe Renditen in schrumpfenden Regionen gehen mit Leerstandsrisiko beim Exit einher. Die Zahl der Haushalte sinkt laut Destatis bis 2050 auf {de(G["haushalte"]["2050_von"],1)} bis {de(G["haushalte"]["2050_bis"],1)} Mio. (2024: {de(G["haushalte"]["2024"],1)} Mio.).')}
+{note(f'Die Erbschaftsteuerstatistik erfasst nur Fälle oberhalb der Freibeträge, das tatsächliche Volumen ist deutlich höher. Das DIW schätzt für 2002 bis 2017 im Schnitt {de(G["diw"]["wert"])} Mrd. € pro Jahr und hält das für eher unterschätzt. Erbimmobilien sind häufig unsaniert, und die Erben wohnen oft nicht vor Ort. Gleichzeitig verlieren Thüringen und Sachsen-Anhalt Einwohner, Brandenburg, Bayern und Schleswig-Holstein gewinnen. Hohe Renditen in schrumpfenden Regionen gehen mit Leerstandsrisiko beim Exit einher. Die Zahl der Haushalte sinkt laut Destatis bis 2050 auf {de(G["haushalte"]["2050_von"],1)} bis {de(G["haushalte"]["2050_bis"],1)} Mio. (2024: {de(G["haushalte"]["2024"],1)} Mio.).')}
 </section>'''
 
 # ---------- 10 Steuer & Recht ----------
@@ -505,7 +505,7 @@ for a, b, c in SRC:
     if (a, b) in seen:
         continue
     seen.add((a, b)); src_items.append((a, b, c))
-src_html = ''.join(f'<li><b>{a}</b> · {b}<br><span class="url">{c}</span></li>' for a, b, c in src_items)
+src_html = ''.join(f'<li>{a} · {b}<br><span class="url">{c}</span></li>' for a, b, c in src_items)
 s11 = f'''<section class="sec brk"><h2>11 · Methodik und Quellen</h2>
 <p>Jede Zahl in diesem Report stammt aus einer der unten genannten Quellen oder ist eine nachvollziehbare Berechnung daraus. Annahmen in Rechenbeispielen sind direkt beim Beispiel genannt. Amtliche Daten erscheinen mit Verzögerung, deshalb steht bei jeder Kennzahl der Bezugszeitraum.</p>
 <p><b>Leverage-Angebotsdaten:</b> Aktive Inserate für Eigentumswohnungen zum Kauf aus mehreren Portalen, ohne Fremddatenbanken, Abruf 07.11.2026. Medianwerte je Stadt im Umkreis von 5 km um das Stadtzentrum, in sehr großen Märkten 2 bis 3 km (Kernstadt), damit jede Auswertung auf allen Inseraten des Kreises beruht. Der Zustand stammt aus der Inseratsangabe, das Baujahr aus dem Inserat. Mieten und Marktwerte sind Schätzungen des Leverage-Bewertungsmodells, keine Angebotsmieten. Angebotspreise sind keine Kaufpreise.</p>
@@ -524,7 +524,7 @@ body{{margin:0;font-family:Montserrat;color:{INK};font-size:10.5px;line-height:1
 .sec{{margin-top:34px}}.brk{{break-before:page;margin-top:0}}h2{{break-after:avoid}}.mapw{{width:88%;margin:0 auto}}
 .cover{{background:{TD};color:#fff;border-radius:14px;padding:28px 28px 26px;margin-bottom:22px}}
 .clogo{{height:26px;display:block;margin-bottom:22px}}
-.kicker{{font-size:9.5px;text-transform:uppercase;letter-spacing:1.5px;font-weight:600;opacity:.9}}
+.sub{{font-size:13px;font-weight:600;opacity:.9;margin-top:-4px}}.kicker{{font-size:9.5px;text-transform:uppercase;letter-spacing:1.5px;font-weight:600;opacity:.9}}
 h1{{font-size:32px;font-weight:800;margin:8px 0 10px;line-height:1.15}}
 .lead{{font-size:12px;margin:0;line-height:1.6}}
 h2{{font-size:18px;font-weight:800;color:{TD};margin:0 0 12px;line-height:1.3}}
@@ -557,14 +557,14 @@ svg{{display:block}}
 '''
 
 HEADER = f'''<div style="width:100%;padding:0 17mm;font-family:Arial;font-size:7.5px;color:{MUT};display:flex;justify-content:space-between;align-items:center;-webkit-print-color-adjust:exact">
-<img src="data:image/png;base64,{LOGO_T}" style="height:13px"/><span style="letter-spacing:1px;text-transform:uppercase">Fix &amp; Flip Marktreport · November 2026</span></div>'''
+<img src="data:image/png;base64,{LOGO_T}" style="height:13px"/><span style="letter-spacing:1px;text-transform:uppercase">Immobilienhandel-Marktreport (Fix-und-Flip) · November 2026</span></div>'''
 FOOTER = f'''<div style="width:100%;padding:0 17mm;font-family:Arial;font-size:7px;color:{MUT};display:flex;justify-content:space-between;align-items:center;-webkit-print-color-adjust:exact">
 <img src="data:image/png;base64,{LOGO_T}" style="height:9px"/><span>Keine Anlage-, Steuer- oder Rechtsberatung. Alle Angaben ohne Gewähr.</span><span><span class="pageNumber"></span> / <span class="totalPages"></span></span></div>'''
 
 html = f'<!doctype html><html lang="de"><head><meta charset="utf-8"><style>{css}</style></head><body>{cover}{s1}{s2}{s3}{s4}{s5}{s6}{s7}{s8}{s9}{s10}{s11}</body></html>'
 (R/'out').mkdir(exist_ok=True)
 (R/'out/report_v2.html').write_text(html)
-out = R/'out/Fix-und-Flip-Marktreport-2026-11.pdf'
+out = R/'out/Immobilienhandel-Marktreport-2026-11.pdf'
 with sync_playwright() as p:
     b = p.chromium.launch(); pg = b.new_page()
     pg.set_content(html, wait_until='networkidle')
