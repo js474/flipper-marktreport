@@ -282,7 +282,9 @@ def cite(name, detail, url):
 
 kurz_leverage = ''
 if robust:
-    kurz_leverage += f"<li>Unsanierte Wohnungen der Baujahre 1950 bis 1994 werden je nach Stadt {de(min(r['spread'] for r in robust))} bis {de(max(r['spread'] for r in robust))} € je m² günstiger angeboten als der Bestand gleicher Baujahre ({len(robust)} Städte mit mindestens 8 Inseraten je Gruppe).</li>"
+    _pos = [x for x in robust if x['spread'] > 0]
+    _top = max(robust, key=lambda x: x['spread'])
+    kurz_leverage += f"<li>In {len(_pos)} von {len(robust)} Städten mit genug Inseraten werden unsanierte Wohnungen der Baujahre 1950 bis 1994 günstiger angeboten als der Bestand gleicher Baujahre. Der größte Abschlag liegt in {_top['c']} bei {de(_top['spread'])} € je m².</li>"
 if tage_rows:
     kurz_leverage += f"<li>Die Hälfte der Inserate ist je nach Stadt seit {de(min(r['tage'] for r in tage_rows))} bis {de(max(r['tage'] for r in tage_rows))} Tagen online. Am längsten stehen Inserate in {', '.join(f"{x['c']} ({de(x['tage'])} Tage)" for x in sorted(tage_rows, key=lambda x: -x['tage'])[:3])}.</li>"
 # ---------- Cover ----------
@@ -367,7 +369,7 @@ def btab(a, b, la, lb):
            (f'Monatsrate ({de(bz,2)} % Zins, {de(tilg,2)} % Tilgung)', a['rate'], b['rate'])]
     body = ''.join(f'<tr><td class="c">{k}</td><td>{de(x)} €</td><td>{de(y)} €</td></tr>' for k, x, y in rws)
     return f'<table class="t"><thead><tr><th>Position</th><th>{la}</th><th>{lb}</th></tr></thead><tbody>{body}</tbody></table>'
-s2 = f'''<section class="sec"><h2>2 · Zwei Seiten der Finanzierung: Flipper und Käufer</h2>
+s2 = f'''<section class="sec brk"><h2>2 · Zwei Seiten der Finanzierung: Flipper und Käufer</h2>
 <p class="intro">Seite A rechnet eine Projektfinanzierung mit variablem Unternehmenskredit, Seite B eine Eigennutzer-Finanzierung mit 10 Jahren Zinsbindung. Die Annahmen stehen unter der jeweiligen Tabelle.</p>
 {block('Seite A: Was der Flipper finanziert (Rechenbeispiel Wohnung)', ftab(flip_by, flip_nw, 'Bayern (3,5 % GrESt)', 'NRW (6,5 % GrESt)'))}
 {src(f'Annahmen: Kaufpreis {de(FX["kauf"])} €, {FX["qm"]} m², Sanierung {de(FX["san_qm"])} € je m², Haltedauer {FX["monate"]} Monate, Zins wie Bundesbank-Durchschnitt für variable Unternehmenskredite bis 1 Mio. € (Sep 2026 bzw. Sep 2025). Individuelle Konditionen liegen bei Projektfinanzierungen oft darüber.')}
@@ -431,11 +433,11 @@ def city_table(rs):
         klein = r['n'] < 50
         def grp(v, n):
             if klein:
-                return '–'
+                return 'k. A.'
             return na(v, lambda x: de(x)+' €') + f'<span class="r">n={n}{" ⚠" if (v is not None and n < 10) else ""}</span>'
         body += (f'<tr><td class="c">{r["c"]}<span class="r">{r["r"]} km</span></td><td>{de(r["n"])}</td><td class="b">{de(r["qm"])} €</td>'
                  f'<td>{grp(r.get("altsan"), r.get("altsan_n", 0))}</td><td>{grp(r.get("alt"), r.get("alt_n", 0))}</td>'
-                 f'<td class="b">{na(r["spread"], lambda v: de(v)+" €") if not klein else "–"}</td><td>{de(r["rend"],1)} %</td><td>{sg(-r["disc"],1)} %</td>'
+                 f'<td class="b">{na(r["spread"], lambda v: de(v)+" €") if not klein else "k. A."}</td><td>{de(r["rend"],1)} %</td><td>{sg(-r["disc"],1)} %</td>'
                  + (f'<td>{na(r.get("tage"), lambda v: de(v))}</td>' if SHOW_TAGE else '')
                  + (f'<td>{na(r["d_qm"], lambda v: sg(v,1)+" %")}</td>' if PREV else '') + '</tr>')
     return ('<table class="t sm"><thead><tr><th>Stadt</th><th>Inserate</th><th>Median €/m²</th><th>Unsaniert 1950 bis 1994</th><th>Bestand 1950 bis 1994</th>'
@@ -450,17 +452,18 @@ s5 = f'''<section class="sec"><h2>5 · Angebotsmarkt Deutschland: {len(rows)} St
 {kpis(kpi(de(n_total),'Ausgewertete Inserate',f'{len(rows)} Städte, alle Bundesländer'),
       kpi(f'{over_mw} von {len(rows)}','Städte mit Angeboten über Marktwert','Median Angebot ggü. Leverage-Bewertung'),
       kpi(de(top_rend[0]['rend'],1)+' %',f'Höchste Bruttorendite',top_rend[0]['c']), cols=3)}
-<div class="block avoid"><h3>Median-Angebotspreis Eigentumswohnungen, € je m²</h3><div class="mapw">{de_map(rows,'qm',lambda v: de(v),'€ je m²',qm_breaks)}</div></div>
-{src('Kreisgröße nach Anzahl der Inserate. Alle Werte stehen zusätzlich in der Tabelle.')}
-<div class="block avoid"><h3>Bruttomietrendite (Median), %</h3><div class="mapw">{de_map(rows,'rend',lambda v: de(v,1)+" %",'Bruttorendite',rend_breaks)}</div></div>
-{src('Bruttorendite: Leverage-Mietschätzung (Jahreskaltmiete) geteilt durch Angebotspreis, Median der Inserate mit Bewertung.')}
-<div class="block"><h3>Alle Städte im Überblick (sortiert nach Preis je m²)</h3>{city_table(rows)}</div>
-{src('Unsaniert: Zustand laut Inserat sanierungsbedürftig. Bestand: alle Inserate derselben Baujahre 1950 bis 1994. Abschlag: Median Bestand minus Median unsaniert, € je m². Werte nur ab 5 Inseraten je Gruppe und 50 Inseraten je Stadt (sonst –). ⚠ = unter 10 Inserate. Angebot ggü. Marktwert: Positiver Wert heißt teurer angeboten als die Leverage-Bewertung. Radius siehe Methodik. Angebotspreise sind keine Kaufpreise.')}
 {block('Größter Abschlag unsaniert ggü. Bestand gleicher Baujahre (1950 bis 1994), € je m²', bars([(r['c'], r['spread']) for r in top_spread[:12]], ' €', dec=0, signed=False, lab=200))}
 {src('Nur Städte mit mindestens 8 Inseraten je Gruppe.')}
 {block('Höchste Bruttomietrenditen (Median)', bars([(r['c'], r['rend']) for r in top_rend[:12]], ' %', dec=1, signed=False, lab=200, vmin=0))}
 {tage_block}
 {note(f'Die größten Abschläge für unsanierte Wohnungen gegenüber dem Bestand gleicher Baujahre zeigen {spread_top3}. Die höchsten Bruttorenditen liegen in {", ".join(r["c"] for r in top_rend[:3])} bei Preisen von {de(min(r["qm"] for r in top_rend[:3]))} bis {de(max(r["qm"] for r in top_rend[:3]))} € je m² und {de(min(r["n"] for r in top_rend[:3]))} bis {de(max(r["n"] for r in top_rend[:3]))} Inseraten je Stadt. In {over_mw} von {len(rows)} Städten liegt der Median der Angebote über der Leverage-Bewertung.')}
+
+<div class="block avoid"><h3>Median-Angebotspreis Eigentumswohnungen, € je m²</h3><div class="mapw">{de_map(rows,'qm',lambda v: de(v),'€ je m²',qm_breaks)}</div></div>
+{src('Kreisgröße nach Anzahl der Inserate. Alle Werte stehen zusätzlich in der Tabelle.')}
+<div class="block avoid"><h3>Bruttomietrendite (Median), %</h3><div class="mapw">{de_map(rows,'rend',lambda v: de(v,1)+" %",'Bruttorendite',rend_breaks)}</div></div>
+{src('Bruttorendite: Leverage-Mietschätzung (Jahreskaltmiete) geteilt durch Angebotspreis, Median der Inserate mit Bewertung.')}
+<div class="block"><h3>Alle Städte im Überblick (sortiert nach Preis je m²)</h3>{city_table(rows)}</div>
+{src('Unsaniert: Zustand laut Inserat sanierungsbedürftig. Bestand: Alle Inserate derselben Baujahre 1950 bis 1994. Abschlag: Median Bestand minus Median unsaniert, € je m². Werte nur ab 5 Inseraten je Gruppe und 50 Inseraten je Stadt (sonst k. A.). ⚠ = unter 10 Inserate. Angebot ggü. Marktwert: Positiver Wert heißt teurer angeboten als die Leverage-Bewertung. Radius siehe Methodik. Angebotspreise sind keine Kaufpreise.')}
 </section>'''
 
 # ---------- 6 Leistbarkeit ----------

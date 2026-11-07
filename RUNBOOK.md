@@ -32,7 +32,7 @@ Städte (je Datei 12):
 - `lev_ost.json`: Berlin, Leipzig, Dresden, Chemnitz, Magdeburg, Halle (Abfrage als "Halle (Saale)"), Erfurt, Rostock, Potsdam, Jena, Zwickau, Görlitz
 
 Feste Parameter: `property_types ["apartment"]`, `deal_type "sale"`, `sources ["market_feed","direct","levi","immowelt","kleinanzeigen","is24","immobilo","seller_direct"]`, `location {"city": STADT, "country": "DE", "radius_km": R}`.
-Radius R: 5. Gesamt-Count `capped` (≥1000) → 3, weiter capped → 2. Bei R=5 unter 150 Inseraten → 10 (falls dort nicht capped). Möglichst denselben Radius wie im Vormonat (steht als `r` im Snapshot).
+Radius R: 5. Gesamt-Count `capped` (≥1000) → 3, weiter capped → 2. Bei R=5 unter 150 Inseraten → 10 (falls dort nicht capped), außer der 10-km-Kreis reicht an eine andere Stadt der Liste (Mittelpunkte unter 20 km, z. B. Gelsenkirchen/Essen, Mainz/Wiesbaden, Potsdam/Berlin): dann bleibt es bei 5. Möglichst denselben Radius wie im Vormonat (steht als `r` im Snapshot).
 
 Median-Methode: `deals_search_count` → n. Dann `deals_search` mit gleichen Filtern, `order_by` Kennzahl, `order_direction asc`, `offset floor(n/2)`, `limit 1`. Median nur ab n ≥ 5, sonst null.
 
