@@ -1,0 +1,19 @@
+{
+ "euribor": {"m3": 2.480, "m6": 2.812, "datum": "05.11.2026", "m3_okt26": 2.436, "m6_okt26": 2.635, "m3_nov25": 1.906, "m6_nov25": 2.042, "estr": 2.442,
+   "quelle": "Deutsche Bundesbank, Geldmarktsätze (Euribor, Quelle EMMI), Stand 06.11.2026", "url": "https://www.bundesbank.de/de/statistiken/geld-und-kapitalmaerkte/zinssaetze-und-renditen/geldmarktsaetze-650668"},
+ "mfi_wohnen": {"sep26": {"var": 4.51, "j1_5": 4.03, "j5_10": 3.91, "j10": 4.13, "ges": 4.09}, "sep25": {"var": 4.16, "j1_5": 3.58, "j5_10": 3.60, "j10": 3.79, "ges": 3.74},
+   "url": "https://www.bundesbank.de/de/statistiken/geld-und-kapitalmaerkte/zinssaetze-und-renditen/wohnungsbaukredite-an-private-haushalte-hypothekarkredite-615036"},
+ "mfi_unternehmen": {"bis1mio_var_sep26": 4.44, "bis1mio_var_sep25": 3.95, "ueber1mio_var_sep26": 3.52, "ueber1mio_var_sep25": 3.06,
+   "url": "https://www.bundesbank.de/resource/blob/650658/3de95a18777a361f7fd6f869f38764f2/472B63F073F071307366337C94F8C870/s510atsuhde-data.pdf"},
+ "bls": {"standards_q3": -4, "standards_q2": 7, "nachfrage": "deutlich gesunken, zweites Quartal in Folge", "ablehnung": "weiter gestiegen", "erwartung_q4": "Standards unverändert, Finanzierungsbedarf sinkt weiter",
+   "url": "https://www.bundesbank.de/de/presse/pressemitteilungen/oktober-ergebnisse-der-umfrage-zum-kreditgeschaeft-bank-lending-survey-in-deutschland-1012864", "veroeffentlicht": "27.10.2026"},
+ "dtb": {"darlehen": 276635, "beleihung": 82.50, "tilgung": 1.91, "zinsbindung": "10 Jahre und knapp 5 Monate", "rate": 1087, "zeitraum": "2. Tertial 2026 (Mai bis Aug)",
+   "t1_25": {"darlehen": 270777, "tilgung": 2.00, "rate": 1013}, "url": "https://www.drklein.de/fileadmin/drk/ueber-dr-klein/pressemitteilungen/pm-drk-dtb-2026-T2.pdf", "veroeffentlicht": "16.09.2026"},
+ "kfw308": {"betrag": "bis 140.000 € (1 Kind), 160.000 € (2 Kinder), 180.000 € (ab 3 Kindern)", "einkommen": "zu versteuerndes Haushaltseinkommen bis 90.000 € bei 1 Kind, plus 10.000 € je weiteres Kind",
+   "energieklasse": "F, G oder H", "sanierung": "Effizienzhaus 85 EE innerhalb von 54 Monaten", "url": "https://www.kfw.de/inlandsfoerderung/Privatpersonen/Bestehende-Immobilie/F%C3%B6rderprodukte/Wohneigentum-f%C3%BCr-Familien-Bestandserwerb-(308)/", "stand": "Merkblatt 08/2026"},
+ "kfw261": {"betrag": "bis 150.000 € je Wohneinheit", "zuschuss": "Tilgungszuschuss je nach Effizienzhaus-Stufe 0 bis 10 %, Worst Performing Building plus 10 Prozentpunkte", "stand": "Merkblatt 09/2026",
+   "url": "https://www.kfw.de/inlandsfoerderung/Privatpersonen/Bestehende-Immobilie/F%C3%B6rderprodukte/Bundesf%C3%B6rderung-f%C3%BCr-effiziente-Geb%C3%A4ude-Wohngeb%C3%A4ude-Kredit-(261-262)/"},
+ "grest": {"Baden-Württemberg": 5.0, "Bayern": 3.5, "Berlin": 6.0, "Brandenburg": 6.5, "Bremen": 5.5, "Hamburg": 5.5, "Hessen": 6.0, "Mecklenburg-Vorpommern": 6.0, "Niedersachsen": 5.0, "Nordrhein-Westfalen": 6.5, "Rheinland-Pfalz": 5.0, "Saarland": 6.5, "Sachsen": 5.5, "Sachsen-Anhalt": 5.0, "Schleswig-Holstein": 6.5, "Thüringen": 5.0,
+   "quelle": "ImmoScout24, Medieninformation Grunderwerbsteuer im Bundesländervergleich, 07.05.2026", "url": "https://www.immobilienscout24.de/unternehmen/fileadmin/user_upload/IS24_20260518_Grunderwerbsteuer.pdf"},
+ "notar": {"wert": "1 bis 1,5", "url": "https://www.verbraucherzentrale.de/wissen/geld-versicherungen/bau-und-immobilienfinanzierung/immobilienfinanzierung-so-berechnen-sie-was-sie-sich-leisten-koennen-5822"}
+}

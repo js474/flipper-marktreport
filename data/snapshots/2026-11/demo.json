@@ -1,0 +1,18 @@
+{
+ "boomer": {"erwerbspersonen_rente_bis_2039": 13.4, "anteil": 31, "url": "https://www.destatis.de/DE/Presse/Pressemitteilungen/2025/08/PD25_N048_13.html"},
+ "alter": {"ab67_2024": 16.7, "ab67_2038_von": 20.5, "ab67_2038_bis": 21.3, "anteil67_2024": 20, "anteil67_2038": "25 bis 27", "durchschnittsalter": 45, "url": "https://www.destatis.de/DE/Presse/Pressemitteilungen/2025/12/PD25_446_12.html"},
+ "anteil65": {"2025": 23, "ost": 28, "west": 22, "url": "https://www.destatis.de/DE/Themen/Querschnitt/Demografischer-Wandel/_inhalt.html"},
+ "erbe": {"vermoegen25": 150.5, "vermoegen_yoy": 32.9, "erbschaften": 87.3, "schenkungen": 63.2, "steuer": 21.4, "grundvermoegen": 51.6, "grund_yoy": 11.2, "uebertragen": 141.1, "url": "https://www.destatis.de/DE/Presse/Pressemitteilungen/2026/08/PD26_306_736.html"},
+ "diw": {"wert": 134, "zeitraum": "2002 bis 2017", "url": "https://www.diw.de/de/diw_01.c.809832.de/publikationen/wochenberichte/2021_05_1/haelfte_aller_erbschaften_und_schenkungen_geht_an_die_reichsten_zehn_prozent_aller_beguenstigten.html"},
+ "eigentum": {"quote22": 41.8, "rentner": 51.0, "url": "https://www.destatis.de/DE/Themen/Gesellschaft-Umwelt/Wohnen/ergebnisse_zusatzprogramm.html"},
+ "haushalte": {"2024": 41.8, "2050_von": 39.7, "2050_bis": 40.9, "single24": 17.9, "url": "https://www.destatis.de/DE/Presse/Pressemitteilungen/2026/11/PD26_386_122.html"},
+ "prognose": {"ost_2070": "14 bis 30 % weniger Einwohner als 2024", "url": "https://www.destatis.de/DE/Presse/Pressemitteilungen/2025/12/PD25_446_12.html"},
+ "bev25": {"ost": -0.5, "west": -0.1, "berlin": 0.4, "hamburg": 0.4, "thueringen": -1.0, "sachsen_anhalt": -0.7, "url": "https://www.destatis.de/DE/Presse/Pressemitteilungen/2026/06/PD26_203_124.html"},
+ "binnen": {"umzuege": 996000, "gewinner": {"Brandenburg": 9000, "Bayern": 8000, "Schleswig-Holstein": 8000}, "verlierer": {"Berlin": -12000, "Thüringen": -6000, "Nordrhein-Westfalen": -5000}, "url": "https://www.destatis.de/DE/Presse/Pressemitteilungen/2026/06/PD26_184_12411.html"},
+ "mieten": {"greix_yoy": 3.7, "greix_qoq": 1.2, "staedte": {"Hamburg": 6.7, "Düsseldorf": 5.4, "Köln": 5.4, "München": 4.8, "Frankfurt": 3.7, "Berlin": 1.4}, "greix_url": "https://www.evangelisch.de/inhalte/260079/15-10-2026/mietpreisindex-angebotsmieten-steigen-wieder-staerker", "greix_hinweis": "Sekundärquelle epd mit Verweis auf Kiel Institut",
+   "vpi_nettokalt_sep": 1.9, "vpi_url": "https://www.destatis.de/DE/Presse/Pressemitteilungen/2026/10/PD26_364_611.html"},
+ "co2": {"2026": "55 bis 65", "2027": "55 bis 65", "ets2": 2028, "url": "https://www.bundestag.de/dokumente/textarchiv/2026/kw42-de-brennstoffemissionshandelsgesetz-1223608"},
+ "geg": {"status": "Gebäudemodernisierungsgesetz in Kraft seit 29.07.2026", "kern": "Pflicht zu 65 % erneuerbarer Wärme bei neuen Heizungen entfällt; Grüngas-/Grünölquote ab 2028, Bio-Treppe ab 2029", "url": "https://www.bundesregierung.de/breg-de/aktuelles/neues-gebaeudemodernisierungsgesetz-2430284"},
+ "zv": {"2025": 14082, "2024": 13445, "url": "https://m-m.argetra.de/asset/21:argetrajahresbericht01-2025pressepdf"},
+ "steuer": {"p23": "https://www.gesetze-im-internet.de/estg/__23.html", "bmf": "BMF-Schreiben vom 26.03.2004, IV A 6 - S 2240 - 46/04, BStBl 2004 I S. 434"}
+}

@@ -1,0 +1,17 @@
+{
+ "wohnkosten": {"anteil25": 24.1, "anteil24": 24.5, "anteil20": 21.5, "allein": 33.2, "alleinerz": 31.7, "ueber40_25": 11.2, "ueber40_24": 12.0,
+   "url": "https://www.destatis.de/DE/Themen/Gesellschaft-Umwelt/Wohnen/Tabellen/eurostat-anteil-wohnkosten-haushaltseinkommen-mz-silc.html", "url2": "https://www.destatis.de/DE/Themen/Gesellschaft-Umwelt/Wohnen/Tabellen/eurostat-anteil-ueberbelastung-wohnkosten-mz-silc.html"},
+ "mietbelastung": {"schnitt": 27.9, "nach_einkommen": {"unter 1.500 €": 44.6, "1.500 bis 2.000 €": 28.8, "2.000 bis 3.000 €": 23.8, "3.000 bis 4.000 €": 19.8, "ab 4.000 €": 15.9},
+   "laender": {"Bremen": 30.8, "Hamburg": 30.3, "Schleswig-Holstein": 30.2, "Saarland": 30.0, "Hessen": 29.6, "Nordrhein-Westfalen": 29.1, "Rheinland-Pfalz": 28.6, "Baden-Württemberg": 28.0, "Bayern": 28.0, "Niedersachsen": 28.0, "Berlin": 27.4, "Mecklenburg-Vorpommern": 25.9, "Brandenburg": 25.3, "Sachsen-Anhalt": 24.4, "Thüringen": 24.2, "Sachsen": 23.3},
+   "ueber40": 16, "url": "https://www.destatis.de/DE/Themen/Gesellschaft-Umwelt/Wohnen/Tabellen/tabelle-wo6-mieten-haushaltsnettoeinkommen.html"},
+ "einkommen": {"schnitt": 3988, "median": 3176, "url": "https://www.destatis.de/DE/Themen/Gesellschaft-Umwelt/Einkommen-Konsum-Lebensbedingungen/Lebensbedingungen-Armutsgefaehrdung/Tabellen/einkommen-einkommensarten.html"},
+ "loehne": {"real": 1.5, "nominal": 4.1, "url": "https://www.destatis.de/DE/Presse/Pressemitteilungen/2026/08/PD26_308_62321.html"},
+ "alq": {"okt26": 6.3, "okt25": 6.2, "anzahl": 2955000, "url": "https://www.arbeitsagentur.de/presse/2026-41-arbeitsmarkt-im-oktober-2026"},
+ "eigentum": {"de": 41.9, "laender": {"Saarland": 59.7, "Rheinland-Pfalz": 50.9, "Niedersachsen": 49.0, "Baden-Württemberg": 48.5, "Bayern": 45.8, "Schleswig-Holstein": 45.7, "Brandenburg": 44.3, "Hessen": 42.5, "Sachsen-Anhalt": 42.4, "Thüringen": 42.1, "Nordrhein-Westfalen": 38.6, "Mecklenburg-Vorpommern": 38.0, "Sachsen": 34.5, "Bremen": 32.0, "Hamburg": 20.3, "Berlin": 15.9},
+   "familien": 57, "url": "https://www.destatis.de/DE/Themen/Gesellschaft-Umwelt/Wohnen/Tabellen/tabelle-eigentumsquote.html"},
+ "flaeche": {"je_wohnung": 94.0, "je_person": 49.5, "wohnungen": 44.0, "eig_wohnung": 125.8, "eig_person": 65.3, "miet_wohnung": 74.4, "miet_person": 48.8, "neubau25": 95.2, "neubau07": 116.4,
+   "url": "https://www.destatis.de/DE/Presse/Pressemitteilungen/2026/07/PD26_250_31231.html", "url2": "https://www.destatis.de/DE/Themen/Gesellschaft-Umwelt/Wohnen/Tabellen/tabelle-wo4-wohnflaeche.html"},
+ "fertig": {"2025": 206600, "yoy": -18.0, "genehmigt_nicht_fertig": 760700, "genehm25": 238100, "url": "https://www.destatis.de/DE/Presse/Pressemitteilungen/2026/05/PD26_174_31121.html"},
+ "haushalte": {"single": 42.1, "zwei": 33.0, "anzahl": 41.1, "url": "https://www.destatis.de/DE/Themen/Gesellschaft-Umwelt/Bevoelkerung/Haushalte-Familien/Tabellen/1-3-privathaushalte-neuer-zeitvergleich.html"},
+ "heizung": {"Gas": 56, "Öl": 19, "Fernwärme": 15, "Holz, Pellets": 4, "Solar, Geothermie, Umweltwärme": 3, "url": "https://www.destatis.de/DE/Presse/Pressemitteilungen/Zensus2022-Pressemitteilungen/PM_zenus2022_45.html"}
+}
