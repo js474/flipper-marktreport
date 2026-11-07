@@ -32,6 +32,11 @@ function handleUpload_(e) {
     while (existing.hasNext()) existing.next().setTrashed(true);
     const blob = Utilities.newBlob(Utilities.base64Decode(body.data), MimeType.PDF, body.name);
     const file = folder.createFile(blob);
+    (body.loeschen || []).forEach(n => {          // ersetzte Ausgaben (z. B. nach Umbenennung) in den Papierkorb
+      if (!ISSUE_RE.test(n) && !/^Fix-und-Flip-Marktreport-\d{4}-\d{2}\.pdf$/.test(n)) return;
+      const it = folder.getFilesByName(n);
+      while (it.hasNext()) it.next().setTrashed(true);
+    });
     console.log('Ausgabe abgelegt: ' + body.name + ' (' + file.getId() + ')');
     return json_({ ok: true, fileId: file.getId() });
   } catch (err) {
@@ -160,7 +165,7 @@ function allIssues_() {
 function publishedIssues_() {
   const now = new Date();
   const all = allIssues_();
-  const pub = all.filter(x => issueAlreadySent_(x.f.getName()) || now >= new Date(x.y, x.mo - 1, CONFIG.sendDay, CONFIG.sendHour));
+  const pub = all.filter(x => issueAlreadySent_(x.f.getName()) || now >= new Date(x.y, x.mo, CONFIG.sendDay, CONFIG.sendHour));   // Berichtsmonat x.mo erscheint am 15. des Folgemonats
   return (pub.length ? pub : all.slice(0, 1)).map(x => x.f);
 }
 

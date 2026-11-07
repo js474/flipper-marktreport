@@ -2,7 +2,7 @@
 
 Ausgeführt vom Monats-Agenten (geplante Aufgabe in der Claude-Cloud, am 12. jedes Monats). Ziel: Am 15. um 9 Uhr verschickt das Apps Script automatisch die neue Ausgabe an alle Abonnentinnen und Abonnenten.
 
-**MONAT** = Erscheinungsmonat im Format JJJJ-MM (Lauf am 12.12.2026 → `2026-12`, Label "Dezember 2026"). **VORMONAT** = neuester Ordner unter `data/snapshots/`.
+**MONAT** = Berichtsmonat im Format JJJJ-MM = Vormonat des Laufs (Lauf am 12.12.2026 → `2026-11`, Titel „Berichtsmonat November 2026“, erscheint am 15.12.2026). Dateiname und Snapshot-Ordner tragen den Berichtsmonat. **VORMONAT** = neuester Ordner unter `data/snapshots/`. Im Snapshot `demo.json` den Schlüssel `stand` (Datenstand, z. B. „7. Dezember 2026“) auf das Abrufdatum setzen.
 
 ## Arbeitsteilung
 - Agent: Daten holen, Snapshot schreiben, `pipeline/report/build.py` auf den neuen Monat anpassen (Labels, Datumsangaben, Schlüssel, Texte), lokal bauen und prüfen, pushen.

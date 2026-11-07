@@ -2,12 +2,19 @@ import json, base64, math, pathlib, os
 from playwright.sync_api import sync_playwright
 
 R = pathlib.Path(__file__).resolve().parents[2]   # Repo-Wurzel
-MONTH = os.environ.get('REPORT_MONTH', '2026-11')
+MONTH = os.environ.get('REPORT_MONTH', '2026-10')   # Berichtsmonat, Erscheinung am 15. des Folgemonats
+_MN = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember']
+_y, _m = int(MONTH[:4]), int(MONTH[5:7])
+BERICHT = f'{_MN[_m-1]} {_y}'
+_ey, _em = (_y + 1, 1) if _m == 12 else (_y, _m + 1)
+ERSCHEINT = f'15. {_MN[_em-1]} {_ey}'
+AUSGABE_NR = (_y - 2026) * 12 + _m - 9          # Oktober 2026 = Ausgabe 01
 D = R / 'data' / 'snapshots' / MONTH
 P = json.load(open(D/'public.json'))
 F = json.load(open(D/'fin.json'))
 Z = json.load(open(D/'zg.json'))
 G = json.load(open(D/'demo.json'))
+STAND = G.get('stand', '7. November 2026')   # Datenstand der Ausgabe, im Snapshot demo.json als 'stand' pflegen
 BBK = json.load(open(D/'bbk.json')) if (D/'bbk.json').exists() else None
 MON = ['Jan','Feb','Mrz','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez']
 def mlabel(tp):   # '2026-09' -> 'Sep 26'
@@ -290,8 +297,8 @@ if tage_rows:
 # ---------- Cover ----------
 cover = f'''<section class="cover-page">
 <div class="cover"><img class="clogo" src="data:image/png;base64,{LOGO_W}"/>
-<div class="kicker">Ausgabe 01 · Stand 7. November 2026</div>
-<h1>Immobilienhandel-Marktreport</h1><div class="sub">Fix-und-Flip · Ausgabe November 2026</div>
+<div class="kicker">Ausgabe {AUSGABE_NR:02d} · Erscheint am {ERSCHEINT} · Datenstand {STAND}</div>
+<h1>Immobilienhandel-Marktreport</h1><div class="sub">Fix-und-Flip · Berichtsmonat {BERICHT}</div>
 <p class="lead">Zinsen, Finanzierung, Preise, Angebotsdaten aus {len(rows)} Städten, Baukosten, Zielgruppe und Demografie. Zusammengeführt aus {de(n_total)} aktiven Wohnungsinseraten der Leverage-Datenbank und über 30 amtlichen und institutionellen Quellen.</p></div>
 <h2 class="first">Die Lage in sechs Zahlen</h2>
 {kpis(
@@ -614,7 +621,7 @@ svg{{display:block}}
 '''
 
 HEADER = f'''<div style="width:100%;padding:0 17mm;font-family:Arial;font-size:7.5px;color:{MUT};display:flex;justify-content:space-between;align-items:center;-webkit-print-color-adjust:exact">
-<img src="data:image/png;base64,{LOGO_T}" style="height:13px"/><span style="letter-spacing:1px;text-transform:uppercase">Immobilienhandel-Marktreport (Fix-und-Flip) · November 2026</span></div>'''
+<img src="data:image/png;base64,{LOGO_T}" style="height:13px"/><span style="letter-spacing:1px;text-transform:uppercase">Immobilienhandel-Marktreport (Fix-und-Flip) · {BERICHT}</span></div>'''
 FOOTER = f'''<div style="width:100%;padding:0 17mm;font-family:Arial;font-size:7px;color:{MUT};display:flex;justify-content:space-between;align-items:center;-webkit-print-color-adjust:exact">
 <img src="data:image/png;base64,{LOGO_T}" style="height:9px"/><span>Keine Anlage-, Steuer- oder Rechtsberatung. Alle Angaben ohne Gewähr.</span><span><span class="pageNumber"></span> / <span class="totalPages"></span></span></div>'''
 

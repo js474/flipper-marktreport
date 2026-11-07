@@ -63,7 +63,7 @@ jobs:
           d.save("ausgaben/Immobilienhandel-Marktreport-$M.pdf", garbage=4, deflate=True)
           PY
           git config user.name "marktreport-bot"; git config user.email "actions@users.noreply.github.com"
-          git add ausgaben/ data/snapshots/$M/kpi.json; [ -f data/snapshots/$M/bbk.json ] && git add data/snapshots/$M/bbk.json
+          git rm -q --cached --ignore-unmatch ausgaben/.loeschen || true; git add -A ausgaben/ data/snapshots/$M/kpi.json; [ -f data/snapshots/$M/bbk.json ] && git add data/snapshots/$M/bbk.json
           git commit -m "Ausgabe $M gebaut [skip ci]" || echo "keine Änderung"
           git push
       - name: An Versand übergeben
@@ -72,7 +72,7 @@ jobs:
           KEY: ${{ secrets.REPORT_UPLOAD_SECRET }}
         run: |
           N=Immobilienhandel-Marktreport-${{ steps.m.outputs.monat }}.pdf
-          python -c "import json,base64;json.dump({'name':'$N','data':base64.b64encode(open('ausgaben/$N','rb').read()).decode()},open('/tmp/p.json','w'))"
+          python -c "import json,base64,os;l=[x.strip() for x in open('ausgaben/.loeschen')] if os.path.exists('ausgaben/.loeschen') else [];json.dump({'name':'$N','data':base64.b64encode(open('ausgaben/$N','rb').read()).decode(),'loeschen':[x for x in l if x]},open('/tmp/p.json','w'))"
           for i in 1 2 3; do
             R=$(curl -sL --data @/tmp/p.json -H 'Content-Type: application/json' "$UPLOAD_URL?upload=1&key=$KEY")
             echo "$R" | grep -q '"ok":true' && { echo "::notice::Versand übernommen: $R"; exit 0; }
