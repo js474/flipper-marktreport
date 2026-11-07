@@ -540,7 +540,7 @@ h3{{font-size:11.5px;font-weight:700;margin:0 0 10px;line-height:1.4}}
 .kpi .v{{font-size:19px;font-weight:800;color:{TD};line-height:1.15;white-space:nowrap}}
 .kpi .l{{font-size:9.5px;font-weight:700;margin-top:6px;line-height:1.35}}
 .kpi .s{{font-size:8.5px;color:{MUT};margin-top:3px;line-height:1.35}}
-.sum{{padding-left:16px;margin:0 0 10px}}.sum li{{margin-bottom:9px;font-size:10.8px}}
+.sum{{padding-left:16px;margin:0 0 10px}}.sum li{{margin-bottom:6px;font-size:10.3px}}
 .toc ol{{columns:2;column-gap:28px;padding-left:18px;margin:0}}.toc li{{margin-bottom:5px}}
 .t{{width:100%;border-collapse:collapse;font-size:10px}}
 .t th{{text-align:left;font-size:8.5px;text-transform:uppercase;letter-spacing:.4px;color:{MUT};border-bottom:1.5px solid {T};padding:7px 8px;vertical-align:bottom;line-height:1.35}}
