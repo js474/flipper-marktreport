@@ -6,4 +6,4 @@ Pipeline für den monatlichen Marktreport von Flippɘr.
 - `pipeline/`: Datenabruf, Kennzahlen, Rendering (im Aufbau).
 - `data/snapshots/JJJJ-MM/`: Rohdaten je Ausgabe, Basis für Vormonatsvergleiche.
 
-Secrets (Settings, Secrets and variables, Actions): `REPORT_UPLOAD_URL`, `REPORT_UPLOAD_SECRET`, `LEVERAGE_API_KEY`, `ANTHROPIC_API_KEY`.
+Secrets (Settings, Secrets and variables, Actions): `REPORT_UPLOAD_SECRET`, `LEVERAGE_API_KEY`, `ANTHROPIC_API_KEY`.

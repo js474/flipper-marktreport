@@ -11,7 +11,7 @@ jobs:
         with: { fetch-depth: 2 }
       - name: Neueste Ausgabe hochladen
         env:
-          UPLOAD_URL: ${{ secrets.REPORT_UPLOAD_URL }}
+          UPLOAD_URL: https://script.google.com/macros/s/AKfycbyvHha131hHSwzH0Wq55Lw0w448oPh7aENy91596Tx6wlvH1Ab8gLBPqeSfOPE9MvnZJQ/exec
           UPLOAD_SECRET: ${{ secrets.REPORT_UPLOAD_SECRET }}
         run: |
           set -e
