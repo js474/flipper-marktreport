@@ -112,7 +112,8 @@ top_spread = sorted(robust, key=lambda r: -r['spread'])
 top_rend = sorted(rows, key=lambda r: -r['rend'])
 over_mw = sum(1 for r in rows if r['disc'] < 0)
 unter50 = sum(1 for r in rows if r['leist_qm'] < 50)
-tage_rows = [r for r in rows if r.get('tage') is not None]
+SHOW_TAGE = False   # start_date ist bei einem Teil der Quellen das Importdatum (Cluster 18.10.2026), Wert noch nicht belastbar
+tage_rows = [r for r in rows if r.get('tage') is not None] if SHOW_TAGE else []
 
 KPI = dict(kaufkraft=kaufkraft, rate_now=rate_now, rate_vj=rate_vj, darl_med=darl_med, flip_by=flip_by, flip_nw=flip_nw,
            buy_by=buy_by, buy_nw=buy_nw, n_total=n_total, staedte=len(rows))
@@ -435,13 +436,15 @@ def city_table(rs):
         body += (f'<tr><td class="c">{r["c"]}<span class="r">{r["r"]} km</span></td><td>{de(r["n"])}</td><td class="b">{de(r["qm"])} €</td>'
                  f'<td>{grp(r.get("altsan"), r.get("altsan_n", 0))}</td><td>{grp(r.get("alt"), r.get("alt_n", 0))}</td>'
                  f'<td class="b">{na(r["spread"], lambda v: de(v)+" €") if not klein else "–"}</td><td>{de(r["rend"],1)} %</td><td>{sg(-r["disc"],1)} %</td>'
-                 f'<td>{na(r.get("tage"), lambda v: de(v))}</td>'
+                 + (f'<td>{na(r.get("tage"), lambda v: de(v))}</td>' if SHOW_TAGE else '')
                  + (f'<td>{na(r["d_qm"], lambda v: sg(v,1)+" %")}</td>' if PREV else '') + '</tr>')
     return ('<table class="t sm"><thead><tr><th>Stadt</th><th>Inserate</th><th>Median €/m²</th><th>Unsaniert 1950 bis 1994</th><th>Bestand 1950 bis 1994</th>'
-            f'<th>Abschlag unsaniert</th><th>Brutto&shy;rendite</th><th>Angebot ggü. Marktwert</th><th>Tage online</th>' + ('<th>Preis Δ Vormonat</th>' if PREV else '') + f'</tr></thead><tbody>{body}</tbody></table>')
+            f'<th>Abschlag unsaniert</th><th>Brutto&shy;rendite</th><th>Angebot ggü. Marktwert</th>' + ('<th>Tage online</th>' if SHOW_TAGE else '') + ('<th>Preis Δ Vormonat</th>' if PREV else '') + f'</tr></thead><tbody>{body}</tbody></table>')
 half = (len(rows) + 1) // 2
 spread_top3 = ', '.join(f"{x['c']} ({de(x['spread'])} €)" for x in top_spread[:3])
 tage_sorted = sorted(tage_rows, key=lambda r: -r['tage'])
+tage_block = (block('Wie lange Wohnungen online sind (Median der aktiven Inserate, Tage)', bars([(r['c'], r['tage']) for r in tage_sorted[:10]] + [(r['c'], r['tage']) for r in tage_sorted[-6:]], ' Tage', dec=0, signed=False, lab=200, rowh=22, vmin=0))
+              + src('Gemessen ab Erstveröffentlichung des Inserats.')) if tage_rows else ''
 s5 = f'''<section class="sec"><h2>5 · Angebotsmarkt Deutschland: {len(rows)} Städte</h2>
 <p class="intro">Auswertung aus der Leverage-Datenbank: {de(n_total)} aktive Wohnungsinserate, abgerufen am 07.11.2026. Medianwerte im Umkreis um die Stadtmitte.</p>
 {kpis(kpi(de(n_total),'Ausgewertete Inserate',f'{len(rows)} Städte, alle Bundesländer'),
@@ -452,12 +455,11 @@ s5 = f'''<section class="sec"><h2>5 · Angebotsmarkt Deutschland: {len(rows)} St
 <div class="block avoid"><h3>Bruttomietrendite (Median), %</h3><div class="mapw">{de_map(rows,'rend',lambda v: de(v,1)+" %",'Bruttorendite',rend_breaks)}</div></div>
 {src('Bruttorendite: Leverage-Mietschätzung (Jahreskaltmiete) geteilt durch Angebotspreis, Median der Inserate mit Bewertung.')}
 <div class="block"><h3>Alle Städte im Überblick (sortiert nach Preis je m²)</h3>{city_table(rows)}</div>
-{src('Unsaniert: Zustand laut Inserat sanierungsbedürftig. Bestand: alle Inserate derselben Baujahre 1950 bis 1994. Abschlag: Median Bestand minus Median unsaniert, € je m². Werte nur ab 5 Inseraten je Gruppe und 50 Inseraten je Stadt (sonst –). ⚠ = unter 10 Inserate. Angebot ggü. Marktwert: Positiver Wert heißt teurer angeboten als die Leverage-Bewertung. Tage online: Median, wie lange die aktiven Inserate bereits online sind. Radius siehe Methodik. Angebotspreise sind keine Kaufpreise.')}
+{src('Unsaniert: Zustand laut Inserat sanierungsbedürftig. Bestand: alle Inserate derselben Baujahre 1950 bis 1994. Abschlag: Median Bestand minus Median unsaniert, € je m². Werte nur ab 5 Inseraten je Gruppe und 50 Inseraten je Stadt (sonst –). ⚠ = unter 10 Inserate. Angebot ggü. Marktwert: Positiver Wert heißt teurer angeboten als die Leverage-Bewertung. Radius siehe Methodik. Angebotspreise sind keine Kaufpreise.')}
 {block('Größter Abschlag unsaniert ggü. Bestand gleicher Baujahre (1950 bis 1994), € je m²', bars([(r['c'], r['spread']) for r in top_spread[:12]], ' €', dec=0, signed=False, lab=200))}
 {src('Nur Städte mit mindestens 8 Inseraten je Gruppe.')}
 {block('Höchste Bruttomietrenditen (Median)', bars([(r['c'], r['rend']) for r in top_rend[:12]], ' %', dec=1, signed=False, lab=200, vmin=0))}
-{block('Wie lange Wohnungen online sind (Median der aktiven Inserate, Tage)', bars([(r['c'], r['tage']) for r in tage_sorted[:10]] + [(r['c'], r['tage']) for r in tage_sorted[-6:]], ' Tage', dec=0, signed=False, lab=200, rowh=22, vmin=0))}
-{src('Oben die 10 Städte mit den ältesten, unten die 6 mit den jüngsten Inseraten. Gemessen ab Erstveröffentlichung des Inserats. Angebotspreise im Inserat können seit der Veröffentlichung gesenkt worden sein.')}
+{tage_block}
 {note(f'Die größten Abschläge für unsanierte Wohnungen gegenüber dem Bestand gleicher Baujahre zeigen {spread_top3}. Die höchsten Bruttorenditen liegen in {", ".join(r["c"] for r in top_rend[:3])} bei Preisen von {de(min(r["qm"] for r in top_rend[:3]))} bis {de(max(r["qm"] for r in top_rend[:3]))} € je m² und {de(min(r["n"] for r in top_rend[:3]))} bis {de(max(r["n"] for r in top_rend[:3]))} Inseraten je Stadt. In {over_mw} von {len(rows)} Städten liegt der Median der Angebote über der Leverage-Bewertung.')}
 </section>'''
 
@@ -560,7 +562,7 @@ for a, b, c in SRC:
 src_html = ''.join(f'<li>{a} · {b}<br><span class="url">{c}</span></li>' for a, b, c in src_items)
 s11 = f'''<section class="sec brk"><h2>10 · Methodik und Quellen</h2>
 <p>Jede Zahl in diesem Report stammt aus einer der unten genannten Quellen oder ist eine nachvollziehbare Berechnung daraus. Annahmen in Rechenbeispielen sind direkt beim Beispiel genannt. Amtliche Daten erscheinen mit Verzögerung, deshalb steht bei jeder Kennzahl der Bezugszeitraum.</p>
-<p><b>Leverage-Angebotsdaten:</b> Aktive Inserate für Eigentumswohnungen zum Kauf aus mehreren Portalen, ohne Fremddatenbanken, Abruf 07.11.2026. Medianwerte je Stadt im Umkreis von 5 km um die Stadtmitte. In großen Städten 2 bis 3 km, weil eine Abfrage höchstens 1.000 Inserate zählt. In Städten mit weniger als 150 Inseraten im 5-km-Umkreis 10 km. Der verwendete Radius steht in der Tabelle unter dem Stadtnamen. Der Zustand stammt aus der Inseratsangabe, das Baujahr aus dem Inserat. Mieten und Marktwerte sind Schätzungen des Leverage-Bewertungsmodells, keine Angebotsmieten. Angebotspreise sind keine Kaufpreise.</p>
+<p><b>Leverage-Angebotsdaten:</b> Aktive Inserate für Eigentumswohnungen zum Kauf aus mehreren Portalen, ohne Fremddatenbanken, Abruf 07.11.2026. Medianwerte je Stadt im Umkreis von 5 km um die Stadtmitte. In großen Städten 2 bis 3 km, weil eine Abfrage höchstens 1.000 Inserate zählt. In Städten mit weniger als 150 Inseraten im 5-km-Umkreis 10 km, dieser Umkreis kann Nachbarorte einschließen (z. B. Mainz und Wiesbaden, Potsdam und Berlin-Wannsee). Der verwendete Radius steht in der Tabelle unter dem Stadtnamen. Der Zustand stammt aus der Inseratsangabe, das Baujahr aus dem Inserat. Mieten und Marktwerte sind Schätzungen des Leverage-Bewertungsmodells, keine Angebotsmieten. Angebotspreise sind keine Kaufpreise.</p>
 <p><b>Grenzen dieser Ausgabe:</b> Kreisgenaue amtliche Daten zu Wanderung, Alter und Eigentum folgen im Quartalsreport. Für einige Kennzahlen lagen nur Sekundärquellen mit Verweis auf den Herausgeber vor (GREIX-Mietindex, Grunderwerbsteuersätze). Sie sind im Quellenverzeichnis so gekennzeichnet.</p>
 <h3>Quellenverzeichnis</h3><ol class="srcl">{src_html}</ol>
 <div class="block avoid"><h3>Rechtlicher Hinweis</h3>

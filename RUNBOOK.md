@@ -45,7 +45,7 @@ Je Stadt (Schlüssel im JSON):
 4. `altsan_n`, `altsan`: ALT + [SAN].
 5. `rend_n`, `rend`, `disc`: [REND], Median `rental_yield_gross_market` in % (2 NK); auf derselben Teilmenge Median `market_discount_pct` in % (positiv = unter Marktwert).
 6. `neu30`: nicht mehr verwenden (crawled_since misst den letzten Crawl, nicht die Erstveröffentlichung).
-7. `tage`: Median `days_online` (order_by `start_date`, offset floor(n/2)).
+7. `tage`: Median `days_online` (order_by `start_date`, offset floor(n/2)). Wird erst angezeigt (`SHOW_TAGE` in build.py), wenn kein Importdatum-Cluster mehr auftritt (Nov 2026: viele Großstädte mit start_date 18.10.2026).
 8. `lat`, `lon` aus `resolved_location`, `r` = Radius.
 €/m² ganzzahlig.
 
