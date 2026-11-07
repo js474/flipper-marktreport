@@ -4,7 +4,7 @@ month = sys.argv[1]
 d = pathlib.Path(__file__).resolve().parents[2] / 'data' / 'snapshots' / month
 fehl = []
 for f in sorted(d.glob('*.json')):
-    if f.name in ('kpi.json',) or f.name.startswith('lev_'):
+    if f.name in ('kpi.json', 'bbk.json') or f.name.startswith('lev_'):
         continue
     for k, v in json.load(open(f)).items():
         if isinstance(v, dict) and not any(isinstance(y, str) and y.startswith('http') for y in v.values()):

@@ -34,6 +34,9 @@ jobs:
           [ -z "$M" ] && M=$(ls data/snapshots | sort | tail -1)
           echo "monat=$M" >> $GITHUB_OUTPUT
           echo "::notice::Monat $M"
+      - name: Bundesbank-Monatsreihen holen
+        env: { REPORT_MONTH: '${{ steps.m.outputs.monat }}' }
+        run: python pipeline/data/bundesbank.py
       - name: Quellencheck
         run: python pipeline/qa/quellencheck.py ${{ steps.m.outputs.monat }}
       - name: PDF bauen
@@ -59,7 +62,7 @@ jobs:
           d.save("ausgaben/Immobilienhandel-Marktreport-$M.pdf", garbage=4, deflate=True)
           PY
           git config user.name "marktreport-bot"; git config user.email "actions@users.noreply.github.com"
-          git add ausgaben/ data/snapshots/$M/kpi.json
+          git add ausgaben/ data/snapshots/$M/kpi.json data/snapshots/$M/bbk.json
           git commit -m "Ausgabe $M gebaut [skip ci]" || echo "keine Änderung"
           git push
       - name: An Versand übergeben

@@ -23,30 +23,36 @@ Quellen je Datei (erste Wahl, jeweils neueste Veröffentlichung):
 - Zusätzlich lesen (für Kurzfassung und Einordnung, nur mit Quelle zitieren): bulwiengesa (https://www.bulwiengesa.de/feed/), Bundesbank- und Destatis-Pressemitteilungen, ifo, vdp-Index.
 
 ## Schritt 2: Leverage-Angebotsdaten (Leverage-MCP)
-Tools: `deals_search_count`, `deals_search` (bei deals_search immer `limit: 1`). Nur Werte aus Tool-Outputs.
+Tools: `deals_search_count`, `deals_search` (bei deals_search immer `limit: 1`). Nur Werte aus Tool-Outputs. Eine Region je Subagent.
 
-Städte (je Datei 12, Namen wie im Vormonat):
+Städte (je Datei 12):
 - `lev_sued.json`: München, Augsburg, Kempten, Nürnberg, Regensburg, Ingolstadt, Würzburg, Stuttgart, Karlsruhe, Freiburg, Ulm, Mannheim
 - `lev_west.json`: Köln, Düsseldorf, Dortmund, Essen, Duisburg, Bochum, Münster, Bielefeld, Aachen, Bonn, Wuppertal, Gelsenkirchen
 - `lev_nord.json`: Hamburg, Bremen, Hannover, Kiel, Lübeck, Osnabrück, Braunschweig, Kassel, Frankfurt, Wiesbaden, Mainz, Saarbrücken
-- `lev_ost.json`: Berlin, Leipzig, Dresden, Chemnitz, Magdeburg, Halle, Erfurt, Rostock, Potsdam, Jena, Zwickau, Görlitz
+- `lev_ost.json`: Berlin, Leipzig, Dresden, Chemnitz, Magdeburg, Halle (Abfrage als "Halle (Saale)"), Erfurt, Rostock, Potsdam, Jena, Zwickau, Görlitz
 
 Feste Parameter: `property_types ["apartment"]`, `deal_type "sale"`, `sources ["market_feed","direct","levi","immowelt","kleinanzeigen","is24","immobilo","seller_direct"]`, `location {"city": STADT, "country": "DE", "radius_km": R}`.
-Radius: R=5. Ist der Gesamt-Count `capped` (≥1000), R=3, falls weiter capped R=2. Der Radius gilt für alle Kennzahlen der Stadt. Möglichst denselben Radius wie im Vormonat nehmen, damit Vergleiche stimmen.
+Radius R: 5. Gesamt-Count `capped` (≥1000) → 3, weiter capped → 2. Bei R=5 unter 150 Inseraten → 10 (falls dort nicht capped). Möglichst denselben Radius wie im Vormonat (steht als `r` im Snapshot).
 
-Median-Methode: `deals_search_count` liefert n der Teilmenge. Dann `deals_search` mit gleichen Filtern, `order_by` Kennzahl, `order_direction asc`, `offset floor(n/2)`, `limit 1`. Wert im Treffer = Median.
+Median-Methode: `deals_search_count` → n. Dann `deals_search` mit gleichen Filtern, `order_by` Kennzahl, `order_direction asc`, `offset floor(n/2)`, `limit 1`. Median nur ab n ≥ 5, sonst null.
 
-Je Stadt:
-1. `n`, `qm`: Gesamt-n und Median `sale_price_per_sqm`.
-2. `san_n`, `san`: criteria `[{"check_type":"condition_allowlist","params":{"values":["renovation_needed"]}}]`, Median nur bei n ≥ 5, sonst null.
-3. `jung_n`, `jung`: criteria `[{"check_type":"building_year_min","threshold":1995},{"check_type":"building_year_max","threshold":2020},{"check_type":"exclude_new_build"}]`, Median bei n ≥ 5.
-4. `rend_n`, `rend`, `disc`: Teilmenge `[{"check_type":"rental_yield_gross_market_min","threshold":0.0001}]`; Median `rental_yield_gross_market` in Prozent (2 NK); auf derselben Teilmenge Median `market_discount` in Prozent (positiv = unter Marktwert).
-5. `neu30`: Count mit `crawled_since` = Abrufdatum minus 30 Tage, ohne criteria.
-6. `lat`, `lon` aus `resolved_location`, `r` = Radius.
-€/m² ganzzahlig. Auffälligkeiten (capped, falsche resolved_location, plan_upgrade_required) im Snapshot unter `"hinweise"` notieren. Die Städte können parallel über Subagenten laufen (je Region einer).
+Kriterien: SAN = `{"check_type":"condition_allowlist","params":{"values":["renovation_needed"]}}`, ALT = `[{"check_type":"building_year_min","threshold":1950},{"check_type":"building_year_max","threshold":1994}]`, REND = `{"check_type":"rental_yield_gross_market_min","threshold":0.0001}`.
+
+Je Stadt (Schlüssel im JSON):
+1. `n`, `qm`: alle Inserate, Median `sale_price_per_sqm`.
+2. `san_n`, `san`: [SAN].
+3. `alt_n`, `alt`: ALT.
+4. `altsan_n`, `altsan`: ALT + [SAN].
+5. `rend_n`, `rend`, `disc`: [REND], Median `rental_yield_gross_market` in % (2 NK); auf derselben Teilmenge Median `market_discount_pct` in % (positiv = unter Marktwert).
+6. `neu30`: Count mit `crawled_since` = Abrufdatum minus 30 Tage.
+7. `tage`: Median `days_online` (order_by `start_date`, offset floor(n/2)).
+8. `lat`, `lon` aus `resolved_location`, `r` = Radius.
+€/m² ganzzahlig.
 
 ## Schritt 3: build.py anpassen
 - Alle Datums- und Monatsangaben (Titelseite "Ausgabe NN · Stand", Header, KPI-Untertitel, Quellen-Zitate mit Stand, Abrufdatum Leverage) auf den neuen Stand. Ausgabenummer hochzählen.
+- Abschnitt „Neu in Recht und Steuern“: Nur wenn es seit dem Vormonat neue Urteile (BFH, BGH), BMF-Schreiben oder Gesetze mit Bezug zu Immobilienhandel, Grunderwerbsteuer, gewerblichem Grundstückshandel oder Förderung gibt. Dann als `recht_neu` (Liste mit titel, datum, kern, url) in `demo.json` und als eigenes Kapitel vor Methodik einbauen. Sonst entfällt das Kapitel.
+- Vormonatsvergleich: Für jede Stadt Preis, Inserate, Rendite und Tage online gegen den Vormonats-Snapshot rechnen und in Tabelle (Spalte Δ Vormonat) und Kurzfassung zeigen.
 - Texte (Kurzfassung, Intros, Notizen) neu schreiben, wo sich Zahlen oder Aussagen geändert haben. Wenn möglich Vormonatsvergleich nennen ("nach X im Vormonat").
 - Jede Zahl im Text kommt aus dem Snapshot (f-String), nie fest eingetippt.
 - Stil: `STYLE.md` ist verbindlich. Keine Erklärsätze, keine Gegenüberstellungs-Formeln, keine Gedankenstriche, nach Doppelpunkt groß, gendergerecht.

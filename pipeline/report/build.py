@@ -8,6 +8,11 @@ P = json.load(open(D/'public.json'))
 F = json.load(open(D/'fin.json'))
 Z = json.load(open(D/'zg.json'))
 G = json.load(open(D/'demo.json'))
+BBK = json.load(open(D/'bbk.json')) if (D/'bbk.json').exists() else None
+MON = ['Jan','Feb','Mrz','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez']
+def mlabel(tp):   # '2026-09' -> 'Sep 26'
+    y, m = tp.split('-')[:2]
+    return f'{MON[int(m)-1]} {y[2:]}'
 S = {}
 for f in ['lev_sued', 'lev_west', 'lev_nord', 'lev_ost']:
     p = D/f'{f}.json'
@@ -20,9 +25,14 @@ def de(x, d=0):
     if d < 0:
         x, d = round(x, d), 0
     s = f"{x:,.{d}f}"
-    return s.replace(',', 'X').replace('.', ',').replace('X', '.')
+    s = s.replace(',', 'X').replace('.', ',').replace('X', '.')
+    if s.startswith('-'):
+        s = '−' + s[1:]           # echtes Minuszeichen
+    if s in ('−0', '−0,0', '−0,00'):
+        s = s[1:]
+    return s
 def sg(x, d=1):
-    return ('+' if x > 0 else '') + de(x, d)
+    return ('+' if round(x, d) > 0 else '') + de(x, d)
 def na(x, f=lambda v: de(v)):
     return 'k. A.' if x is None else f(x)
 
@@ -74,17 +84,35 @@ buy_nw = buyer(F['grest']['Nordrhein-Westfalen'])
 rows = []
 for c, s in S.items():
     r = dict(c=c, **s)
-    r['spread'] = (s['jung'] - s['san']) if (s.get('jung') and s.get('san')) else None
-    r['abschlag'] = (s['san'] / s['qm'] - 1) * 100 if s.get('san') else None
+    # Abschlag unsaniert ggü. Bestand gleicher Baujahre (1950 bis 1994), nur ab 50 Inseraten in der Stadt
+    ok = s['n'] >= 50 and s.get('alt') and s.get('altsan')
+    r['spread'] = (s['alt'] - s['altsan']) if ok else None
+    r['abschlag'] = (s['altsan'] / s['alt'] - 1) * 100 if ok else None
+    r['dyn'] = s['neu30'] / s['n'] * 100 if s.get('neu30') is not None and s['n'] else None
     r['gap'] = s['rend'] - bz
     r['leist_qm'] = darl_med / s['qm']
     rows.append(r)
 rows.sort(key=lambda r: -r['qm'])
+# Vormonatsvergleich: automatisch, sobald ein älterer Snapshot existiert
+_alle = sorted(x.name for x in (R / 'data' / 'snapshots').iterdir() if x.is_dir() and x.name < MONTH)
+PREV = None
+if _alle:
+    PREV = {}
+    for f in ['lev_sued', 'lev_west', 'lev_nord', 'lev_ost']:
+        pp = R / 'data' / 'snapshots' / _alle[-1] / f'{f}.json'
+        if pp.exists():
+            PREV.update(json.load(open(pp)))
+for r in rows:
+    v = (PREV or {}).get(r['c'])
+    r['d_qm'] = (r['qm'] / v['qm'] - 1) * 100 if v and v.get('qm') else None
+    r['d_n'] = r['n'] - v['n'] if v and v.get('n') is not None else None
 n_total = sum(r['n'] for r in rows)
-robust = [r for r in rows if r['spread'] is not None and r['san_n'] >= 8 and r['jung_n'] >= 8]
+robust = [r for r in rows if r['spread'] is not None and r['altsan_n'] >= 8 and r['alt_n'] >= 8]
 top_spread = sorted(robust, key=lambda r: -r['spread'])
 top_rend = sorted(rows, key=lambda r: -r['rend'])
 over_mw = sum(1 for r in rows if r['disc'] < 0)
+unter50 = sum(1 for r in rows if r['leist_qm'] < 50)
+tage_rows = [r for r in rows if r.get('tage') is not None]
 
 KPI = dict(kaufkraft=kaufkraft, rate_now=rate_now, rate_vj=rate_vj, darl_med=darl_med, flip_by=flip_by, flip_nw=flip_nw,
            buy_by=buy_by, buy_nw=buy_nw, n_total=n_total, staedte=len(rows))
@@ -153,6 +181,7 @@ def line_chart(pts, lo, hi, w=640, h=180, dec=2, unit=' %'):
 
 GEO = json.load(open(R/'assets/germany.geojson'))
 PADX = 70
+RUHR = ['Duisburg', 'Essen', 'Gelsenkirchen', 'Bochum', 'Wuppertal']
 def de_map(rows, key, fmt, legend_title, breaks, w=520):
     lat0 = math.radians(51.2)
     lon_min, lon_max, lat_min, lat_max = 5.6, 15.3, 47.1, 55.2
@@ -184,7 +213,20 @@ def de_map(rows, key, fmt, legend_title, breaks, w=520):
         placed.append((x - rad, y - rad, x + rad, y + rad))
     def hit(b):
         return any(not (b[2] < q[0] or b[0] > q[2] or b[3] < q[1] or b[1] > q[3]) for q in placed)
+    ruhr = [(x, y, rad, r) for x, y, rad, r in dots if r['c'] in RUHR]
+    if ruhr:
+        cx = sum(d[0] for d in ruhr) / len(ruhr); cy = sum(d[1] for d in ruhr) / len(ruhr)
+        o.append(f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="30" fill="none" stroke="#8aa9ab" stroke-width="0.8" stroke-dasharray="3 2"/>')
+        bx, by = -PADX + 4, cy - 70
+        o.append(f'<line x1="{cx-30:.1f}" y1="{cy:.1f}" x2="{bx+92:.1f}" y2="{by+8:.1f}" stroke="#8aa9ab" stroke-width="0.7"/>')
+        o.append(f'<text x="{bx}" y="{by}" font-size="9" font-weight="700" fill="{INK}">Rhein-Ruhr</text>')
+        for i, (_, _, _, rr) in enumerate(sorted(ruhr, key=lambda d: d[3]['c'])):
+            o.append(f'<text x="{bx}" y="{by+13+i*12}" font-size="9" fill="{INK}">{rr["c"]} {fmt(rr[key])}</text>')
+        placed.append((bx, by - 10, bx + 95, by + 13 + len(ruhr) * 12))
+        placed.append((cx - 31, cy - 31, cx + 31, cy + 31))
     for x, y, rad, r in dots:
+        if r['c'] in RUHR:
+            continue
         txt = f"{r['c']} {fmt(r[key])}"
         tw = len(txt) * 5.3
         cands = []
@@ -237,6 +279,11 @@ SRC = []
 def cite(name, detail, url):
     SRC.append((name, detail, url))
 
+kurz_leverage = ''
+if robust:
+    kurz_leverage += f"<li>Unsanierte Wohnungen der Baujahre 1950 bis 1994 werden je nach Stadt {de(min(r['spread'] for r in robust))} bis {de(max(r['spread'] for r in robust))} € je m² günstiger angeboten als der Bestand gleicher Baujahre ({len(robust)} Städte mit mindestens 8 Inseraten je Gruppe).</li>"
+if tage_rows:
+    kurz_leverage += f"<li>Die Hälfte der Inserate ist je nach Stadt seit {de(min(r['tage'] for r in tage_rows))} bis {de(max(r['tage'] for r in tage_rows))} Tagen online. In den letzten 30 Tagen kamen {de(sum(r.get('neu30') or 0 for r in rows))} neue Inserate in den {len(rows)} Städten dazu.</li>"
 # ---------- Cover ----------
 cover = f'''<section class="cover-page">
 <div class="cover"><img class="clogo" src="data:image/png;base64,{LOGO_W}"/>
@@ -245,9 +292,9 @@ cover = f'''<section class="cover-page">
 <p class="lead">Zinsen, Finanzierung, Preise, Angebotsdaten aus {len(rows)} Städten, Baukosten, Zielgruppe und Demografie. Zusammengeführt aus {de(n_total)} aktiven Wohnungsinseraten der Leverage-Datenbank und über 30 amtlichen und institutionellen Quellen.</p></div>
 <h2 class="first">Die Lage in sechs Zahlen</h2>
 {kpis(
- kpi(de(bz,2)+' %', 'Bauzins 10 Jahre+', f'Sep 2026, Vorjahr {de(bz_vj,2)} %'),
+ kpi(de(bz,2)+' %', 'Bauzins über 10 Jahre', f'Sep 2026, Vorjahr {de(bz_vj,2)} %'),
  kpi(de(F['euribor']['m3'],2)+' %', '3-Monats-Euribor', f'05.11.2026, Nov 2025 Ø {de(F["euribor"]["m3_nov25"],2)} %'),
- kpi(de(kaufkraft,1).replace('-', '−')+' %', 'Darlehensbudget Käufer', 'bei gleicher Rate wie vor 12 Monaten'),
+ kpi(de(kaufkraft,1)+' %', 'Darlehensbudget Käufer', 'bei gleicher Rate wie vor 12 Monaten'),
  cols=3)}
 {kpis(
  kpi(sg(P['greix']['etw_yoy'])+' %', 'Wohnungspreise ggü. Vorjahr', 'GREIX Q3 2026, nominal'),
@@ -257,20 +304,26 @@ cover = f'''<section class="cover-page">
 <h2>Kurzfassung</h2>
 <ul class="sum">
 <li>Der Käufer am Ende hat weniger Budget. Bei gleicher Monatsrate wie vor einem Jahr finanziert ein Haushalt heute {de(abs(kaufkraft),1)} % weniger Darlehen. Ein Haushalt mit Medianeinkommen ({de(ek_med)} € netto) kommt bei 35 % Belastung auf rund {de(darl_med,-3)} € Darlehen, der durchschnittliche Baufinanzierungskredit liegt bei {de(F['dtb']['darlehen'],-3)} €.</li>
-<li>Kurzfristiges Geld ist teurer als langfristiges. Variable Wohnungsbaukredite kosten {de(F['mfi_wohnen']['sep26']['var'],2)} %, zehnjährige {de(F['mfi_wohnen']['sep26']['j10'],2)} %. Für die Projektfinanzierung des Flips ist das der teuerste Teil der Zinskurve.</li>
+<li>Variable Wohnungsbaukredite kosten {de(F['mfi_wohnen']['sep26']['var'],2)} %, Kredite mit über 10 Jahren Bindung {de(F['mfi_wohnen']['sep26']['j10'],2)} %. Kurzfristiges Geld ist teurer als langfristiges.</li>
 <li>Kaufpreise geben nach, Mieten steigen. Wohnungen sind nominal {de(abs(P['greix']['etw_yoy']),1)} % günstiger als vor einem Jahr, Angebotsmieten {de(G['mieten']['greix_yoy'],1)} % teurer. Das verbessert die Rendite für Kapitalanleger als Käufer.</li>
 <li>Sanierung kostet {de(P['baupreise']['instand_yoy'],1)} % mehr. Gleichzeitig sinken die Wohnungspreise, die Marge hängt damit stärker am Einkaufspreis.</li>
-<li>Die Flip-Spanne ist regional sehr unterschiedlich. Zwischen sanierungsbedürftigen Wohnungen und Bestand der Baujahre 1995 bis 2020 liegen je nach Stadt {de(min(r['spread'] for r in robust))} bis {de(max(r['spread'] for r in robust))} € je m².</li>
-<li>Die Erbengeneration verkauft. 2025 wurden steuerlich {de(G['erbe']['grundvermoegen'],1)} Mrd. € Grundvermögen übertragen, {sg(G['erbe']['grund_yoy'])} % mehr als im Vorjahr. Bis 2039 erreichen {de(G['boomer']['erwerbspersonen_rente_bis_2039'],1)} Mio. Erwerbspersonen das Rentenalter.</li>
+{kurz_leverage}
+<li>2025 wurde steuerlich Grundvermögen von {de(G['erbe']['grundvermoegen'],1)} Mrd. € vererbt oder verschenkt, {de(G['erbe']['grund_yoy'],1)} % mehr als im Vorjahr. Bis 2039 erreichen {de(G['boomer']['erwerbspersonen_rente_bis_2039'],1)} Mio. Erwerbspersonen das Rentenalter.</li>
 </ul>
 <div class="toc avoid"><h3>Inhalt</h3><ol>
 <li>Zinsen und Finanzierungsumfeld</li><li>Zwei Seiten der Finanzierung: Flipper und Käufer</li><li>Kaufnebenkosten und Förderung</li>
 <li>Preise und Mieten</li><li>Angebotsmarkt Deutschland: {len(rows)} Städte</li><li>Leistbarkeit: Was sich der Käufer leisten kann</li>
 <li>Baukosten, Energie und Regulierung</li><li>Zielgruppe: Haushalte, Einkommen, Wohnfläche</li><li>Demografie, Ruhestand und Erben</li>
-<li>Steuern und Recht für Flipper</li><li>Methodik und Quellen</li></ol></div>
+<li>Methodik und Quellen</li></ol></div>
 </section>'''
 
 # ---------- 1 Zinsen ----------
+if BBK:
+    _pts = [(mlabel(t), v) for t, v in BBK['reihen']['j10']]
+    _lo = math.floor(min(v for _, v in _pts) * 5) / 5 - 0.2; _hi = math.ceil(max(v for _, v in _pts) * 5) / 5 + 0.2
+    zins_verlauf = block(f'Bauzins über 10 Jahre, letzte {len(_pts)} Monate', line_chart(_pts, _lo, _hi, dec=2)) + src('Quelle: Deutsche Bundesbank, MFI-Zinsstatistik, Zeitreihe ' + BBK['reihen_id_j10'] + ', Monatswerte.')
+else:
+    zins_verlauf = ''
 mw, mv = F['mfi_wohnen']['sep26'], F['mfi_wohnen']['sep25']
 cite('Deutsche Bundesbank', 'MFI-Zinsstatistik, Wohnungsbaukredite an private Haushalte nach Zinsbindung, Stand 02.11.2026', F['mfi_wohnen']['url'])
 cite('Deutsche Bundesbank', 'MFI-Zinsstatistik, Kredite an nichtfinanzielle Kapitalgesellschaften, Stand 02.11.2026', F['mfi_unternehmen']['url'])
@@ -286,9 +339,8 @@ s1 = f'''<section class="sec brk"><h2>1 · Zinsen und Finanzierungsumfeld</h2>
       kpi(de(P['ezb']['einlage'],2)+' %','EZB-Einlagesatz','zuletzt am 29.10. unverändert'), cols=3)}
 {block('Effektivzins Wohnungsbaukredite nach Zinsbindung, Sep 2025 und Sep 2026', grouped(['variabel bis 1 J.','1 bis 5 J.','5 bis 10 J.','über 10 J.'],[mv['var'],mv['j1_5'],mv['j5_10'],mv['j10']],[mw['var'],mw['j1_5'],mw['j5_10'],mw['j10']],'September 2025','September 2026'))}
 {src('Quelle: Deutsche Bundesbank, MFI-Zinsstatistik, Neugeschäft, Effektivzinssatz.')}
-{block('Bauzins über 10 Jahre im Verlauf', line_chart([('Okt 25',P['bauzins']['okt25']),('Jan 26',P['bauzins']['jan26']),('Jul 26',P['bauzins']['jul26']),('Aug 26',P['bauzins']['aug26']),('Sep 26',P['bauzins']['sep26'])], 3.6, 4.4))}
-{src('Quelle: Deutsche Bundesbank. Ausgewiesene Monate, keine durchgehende Reihe.')}
-{note(f'Der 3-Monats-Euribor, an dem variable Darlehen und viele Projektfinanzierungen hängen, liegt bei {de(F["euribor"]["m3"],2)} % nach {de(F["euribor"]["m3_nov25"],2)} % im Durchschnitt November 2025. Das sind {de(F["euribor"]["m3"]-F["euribor"]["m3_nov25"],2)} Prozentpunkte mehr. Die EZB hat den Einlagesatz am 10.09.2026 auf {de(P["ezb"]["einlage"],2)} % erhöht. Variable Wohnungsbaukredite sind mit {de(mw["var"],2)} % teurer als Kredite mit 5 bis 10 Jahren Bindung ({de(mw["j5_10"],2)} %). Jeder Monat Projektlaufzeit läuft damit zum höchsten Satz der Zinskurve.')}
+{zins_verlauf}
+{note(f'Der 3-Monats-Euribor, an dem variable Darlehen und viele Projektfinanzierungen hängen, liegt bei {de(F["euribor"]["m3"],2)} % nach {de(F["euribor"]["m3_nov25"],2)} % im Durchschnitt November 2025. Das sind {de(F["euribor"]["m3"]-F["euribor"]["m3_nov25"],2)} Prozentpunkte mehr. Die EZB hat den Einlagesatz am 10.09.2026 auf {de(P["ezb"]["einlage"],2)} % erhöht. Variable Wohnungsbaukredite sind mit {de(mw["var"],2)} % teurer als Kredite mit 5 bis 10 Jahren Bindung ({de(mw["j5_10"],2)} %).')}
 {block('Kreditvergabe der Banken (Bank Lending Survey, Q3 2026)', f'<p>Die Banken haben ihre Kreditstandards für private Wohnungsbaukredite im dritten Quartal leicht gelockert (Nettoanteil {de(F["bls"]["standards_q3"])} %, nach {sg(F["bls"]["standards_q2"],0)} % im Vorquartal). Die Nachfrage ist das zweite Quartal in Folge deutlich gesunken, die Ablehnungsraten sind weiter gestiegen. Für das vierte Quartal erwarten die Banken unveränderte Standards und einen weiter sinkenden Finanzierungsbedarf.</p>')}
 {src('Quelle: Deutsche Bundesbank, Bank Lending Survey, veröffentlicht 27.10.2026.')}
 </section>'''
@@ -319,12 +371,12 @@ s2 = f'''<section class="sec"><h2>2 · Zwei Seiten der Finanzierung: Flipper und
 {block('Seite A: Was der Flipper finanziert (Rechenbeispiel Wohnung)', ftab(flip_by, flip_nw, 'Bayern (3,5 % GrESt)', 'NRW (6,5 % GrESt)'))}
 {src(f'Annahmen: Kaufpreis {de(FX["kauf"])} €, {FX["qm"]} m², Sanierung {de(FX["san_qm"])} € je m², Haltedauer {FX["monate"]} Monate, Zins wie Bundesbank-Durchschnitt für variable Unternehmenskredite bis 1 Mio. € (Sep 2026 bzw. Sep 2025). Individuelle Konditionen liegen bei Projektfinanzierungen oft darüber.')}
 {note(f'Die Zinskosten des Projekts sind binnen eines Jahres um rund {de(flip_by["zins"]-flip_by["zins_vj"],-1)} € gestiegen. Jeder zusätzliche Monat Haltedauer kostet im Beispiel rund {de(flip_by["zins"]/FX["monate"])} €. Zwischen Bayern und NRW liegen allein bei der Grunderwerbsteuer {de(flip_nw["nk"]-flip_by["nk"])} € Unterschied, die vor Verkauf als Eigenkapital gebunden sind.')}
-{block('Seite B: Was der Käufer finanziert (Rechenbeispiel Eigennutzer)', btab(buy_by, buy_nw, 'Bayern', 'NRW'))}
+<div class="avoid">{block('Seite B: Was der Käufer finanziert (Rechenbeispiel Eigennutzer)', btab(buy_by, buy_nw, 'Bayern', 'NRW'))}
 {src(f'Annahmen: Kaufpreis {de(KX["preis"])} €, Beleihungsauslauf {de(KX["bel"],1)} % und Tilgung {de(tilg,2)} % entsprechen dem Durchschnitt laut Dr. Klein Trendindikator (2. Tertial 2026), Zins laut Bundesbank (über 10 Jahre, Sep 2026). Makler nicht berücksichtigt.')}
 {kpis(kpi(de(F['dtb']['darlehen'])+' €','Ø Darlehenshöhe','Dr. Klein, Mai bis Aug 2026'),
       kpi(de(F['dtb']['beleihung'],1)+' %','Ø Beleihungsauslauf','Dr. Klein, Mai bis Aug 2026'),
-      kpi(de(F['dtb']['tilgung'],2)+' %','Ø anfängliche Tilgung', F['dtb']['zinsbindung']+' Zinsbindung'), cols=3)}
-{block('Was sich verändert hat', f'<table class="t"><thead><tr><th></th><th>Sep 2025</th><th>Sep 2026</th><th>Differenz</th></tr></thead><tbody><tr><td class="c">Monatsrate für {de(darl)} € Darlehen</td><td>{de(rate_vj,2)} €</td><td>{de(rate_now,2)} €</td><td class="b neg">{sg(rate_now-rate_vj,2)} €</td></tr><tr><td class="c">Darlehen bei Rate von {de(rate_vj,2)} €</td><td>{de(darl)} €</td><td>{de(darl_gleich)} €</td><td class="b neg">{sg(darl_gleich-darl)} €</td></tr></tbody></table>')}
+      kpi(de(F['dtb']['tilgung'],2)+' %','Ø anfängliche Tilgung', F['dtb']['zinsbindung']+' Zinsbindung'), cols=3)}</div>
+{block('Was sich verändert hat', f'<table class="t"><thead><tr><th></th><th>Sep 2025</th><th>Sep 2026</th><th>Differenz</th></tr></thead><tbody><tr><td class="c">Monatsrate für {de(darl)} € Darlehen</td><td>{de(rate_vj)} €</td><td>{de(rate_now)} €</td><td class="b neg">{sg(rate_now-rate_vj,0)} €</td></tr><tr><td class="c">Darlehen bei Rate von {de(rate_vj)} €</td><td>{de(darl)} €</td><td>{de(darl_gleich)} €</td><td class="b neg">{sg(darl_gleich-darl,0)} €</td></tr></tbody></table>')}
 {note(f'Ein Käufer braucht im Beispiel {de(buy_by["ek"])} € (Bayern) bis {de(buy_nw["ek"])} € (NRW) eigenes Geld. Wer heute dieselbe Rate wie vor einem Jahr tragen kann, bekommt {de(abs(kaufkraft),1)} % weniger Darlehen. Vergleichspreise aus 2025 überschätzen deshalb das heutige Käuferbudget.')}
 </section>'''
 
@@ -355,8 +407,8 @@ s4 = f'''<section class="sec"><h2>4 · Preise und Mieten</h2>
 <p class="intro">Drei Kaufpreisindizes mit unterschiedlicher Methode (Notarverträge, Finanzierungsfälle, amtliche Transaktionsdaten) und zwei Mietindikatoren.</p>
 {kpis(kpi(sg(P['greix']['etw_qoq'])+' %','GREIX ETW ggü. Vorquartal','Q3 2026, nominal'),
       kpi(sg(P['greix']['etw_yoy'])+' %','GREIX ETW ggü. Vorjahr',f'real {sg(P["greix"]["etw_real_yoy"])} %'),
-      kpi(sg(P['epx']['etw_yoy'],2)+' %','Europace ETW ggü. Vorjahr','Sep 2026'), cols=3)}
-{kpis(kpi(sg(P['epx']['neubau_yoy'],2)+' %','Europace Neubauhäuser','Sep 2026 ggü. Vorjahr'),
+      kpi(sg(P['epx']['etw_yoy'],1)+' %','Europace ETW ggü. Vorjahr','Sep 2026'), cols=3)}
+{kpis(kpi(sg(P['epx']['neubau_yoy'],1)+' %','Europace Neubauhäuser','Sep 2026 ggü. Vorjahr'),
       kpi(sg(G['mieten']['greix_yoy'])+' %','Angebotsmieten (GREIX)','Q3 2026 ggü. Vorjahr'),
       kpi(sg(G['mieten']['vpi_nettokalt_sep'])+' %','Nettokaltmieten (VPI)','Sep 2026 ggü. Vorjahr'), cols=3)}
 {block('Eigentumswohnungen nach Großstadt, Veränderung zum Vorquartal (GREIX Q3 2026)', bars(list(P['greix']['staedte_qoq'].items())))}
@@ -365,7 +417,7 @@ s4 = f'''<section class="sec"><h2>4 · Preise und Mieten</h2>
 {src('Quelle: Destatis, Häuserpreisindex, Pressemitteilung Nr. 336 vom 24.09.2026.')}
 {block('Angebotsmieten nach Großstadt, Veränderung zum Vorjahr (GREIX Q3 2026)', bars(sorted(G['mieten']['staedte'].items(), key=lambda x: -x[1])))}
 {src('Quelle: GREIX-Mietpreisindex, Kiel Institut, Meldung vom 15.10.2026, abgerufen über epd. Angebotsmieten, keine Bestandsmieten.')}
-{note(f'Wohnungen nominal {sg(P["greix"]["etw_yoy"])} %, Angebotsmieten {sg(G["mieten"]["greix_yoy"])} %. Die Bruttorendite für Kapitalanleger steigt dadurch, am stärksten in Hamburg, Düsseldorf und Köln. Kreisfreie Großstädte außerhalb der Metropolen legen bei Wohnungspreisen zu ({sg(hpi["Kreisfreie Großstädte außerhalb der Metropolen"])} %), dicht besiedelte ländliche Kreise verlieren ({sg(hpi["Dicht besiedelte ländliche Kreise"])} %).')}
+{note(f'Wohnungen nominal {sg(P["greix"]["etw_yoy"])} %, Angebotsmieten {sg(G["mieten"]["greix_yoy"])} %. Bei sinkenden Preisen und steigenden Mieten steigt die rechnerische Bruttorendite für Kapitalanleger. Die stärksten Mietanstiege meldet GREIX für {", ".join(f"{k} ({sg(v)} %)" for k, v in sorted(G["mieten"]["staedte"].items(), key=lambda x: -x[1])[:3])}. Kreisfreie Großstädte außerhalb der Metropolen legen bei Wohnungspreisen zu ({sg(hpi["Kreisfreie Großstädte außerhalb der Metropolen"])} %), dicht besiedelte ländliche Kreise verlieren ({sg(hpi["Dicht besiedelte ländliche Kreise"])} %).')}
 </section>'''
 
 # ---------- 5 Angebotsmarkt ----------
@@ -375,17 +427,23 @@ rend_breaks = [4.0, 4.5, 5.0, 6.0]
 def city_table(rs):
     body = ''
     for r in rs:
-        warn_s = ' ⚠' if r['san'] is not None and r['san_n'] < 10 else ''
-        warn_j = ' ⚠' if r['jung'] is not None and r['jung_n'] < 10 else ''
+        klein = r['n'] < 50
+        def grp(v, n):
+            if klein:
+                return '–'
+            return na(v, lambda x: de(x)+' €') + f'<span class="r">n={n}{" ⚠" if (v is not None and n < 10) else ""}</span>'
         body += (f'<tr><td class="c">{r["c"]}<span class="r">{r["r"]} km</span></td><td>{de(r["n"])}</td><td class="b">{de(r["qm"])} €</td>'
-                 f'<td>{na(r["san"], lambda v: de(v)+" €")}<span class="r">n={r["san_n"]}{warn_s}</span></td>'
-                 f'<td>{na(r["jung"], lambda v: de(v)+" €")}<span class="r">n={r["jung_n"]}{warn_j}</span></td>'
-                 f'<td class="b">{na(r["spread"], lambda v: de(v)+" €")}</td><td>{de(r["rend"],2)} %</td><td>{sg(-r["disc"],1)} %</td></tr>')
-    return ('<table class="t sm"><thead><tr><th>Stadt</th><th>Inserate</th><th>Median €/m²</th><th>Sanierungs&shy;bedürftig</th><th>Baujahr 1995 bis 2020</th>'
-            f'<th>Spread</th><th>Brutto&shy;rendite</th><th>Angebot ggü. Marktwert</th></tr></thead><tbody>{body}</tbody></table>')
+                 f'<td>{grp(r.get("altsan"), r.get("altsan_n", 0))}</td><td>{grp(r.get("alt"), r.get("alt_n", 0))}</td>'
+                 f'<td class="b">{na(r["spread"], lambda v: de(v)+" €") if not klein else "–"}</td><td>{de(r["rend"],1)} %</td><td>{sg(-r["disc"],1)} %</td>'
+                 f'<td>{na(r.get("tage"), lambda v: de(v))}</td>'
+                 + (f'<td>{na(r["d_qm"], lambda v: sg(v,1)+" %")}</td>' if PREV else '') + '</tr>')
+    return ('<table class="t sm"><thead><tr><th>Stadt</th><th>Inserate</th><th>Median €/m²</th><th>Unsaniert 1950 bis 1994</th><th>Bestand 1950 bis 1994</th>'
+            f'<th>Abschlag unsaniert</th><th>Brutto&shy;rendite</th><th>Angebot ggü. Marktwert</th><th>Tage online</th>' + ('<th>Preis Δ Vormonat</th>' if PREV else '') + f'</tr></thead><tbody>{body}</tbody></table>')
 half = (len(rows) + 1) // 2
-s5 = f'''<section class="sec brk"><h2>5 · Angebotsmarkt Deutschland: {len(rows)} Städte</h2>
-<p class="intro">Exklusive Auswertung aus der Leverage-Datenbank: {de(n_total)} aktive Wohnungsinserate, abgerufen am 07.11.2026. Medianwerte im Umkreis um das jeweilige Stadtzentrum.</p>
+spread_top3 = ', '.join(f"{x['c']} ({de(x['spread'])} €)" for x in top_spread[:3])
+dyn_sorted = sorted([r for r in rows if r['dyn'] is not None], key=lambda r: -r['dyn'])
+s5 = f'''<section class="sec"><h2>5 · Angebotsmarkt Deutschland: {len(rows)} Städte</h2>
+<p class="intro">Auswertung aus der Leverage-Datenbank: {de(n_total)} aktive Wohnungsinserate, abgerufen am 07.11.2026. Medianwerte im Umkreis um die Stadtmitte.</p>
 {kpis(kpi(de(n_total),'Ausgewertete Inserate',f'{len(rows)} Städte, alle Bundesländer'),
       kpi(f'{over_mw} von {len(rows)}','Städte mit Angeboten über Marktwert','Median Angebot ggü. Leverage-Bewertung'),
       kpi(de(top_rend[0]['rend'],1)+' %',f'Höchste Bruttorendite',top_rend[0]['c']), cols=3)}
@@ -394,10 +452,13 @@ s5 = f'''<section class="sec brk"><h2>5 · Angebotsmarkt Deutschland: {len(rows)
 <div class="block avoid"><h3>Bruttomietrendite (Median), %</h3><div class="mapw">{de_map(rows,'rend',lambda v: de(v,1)+" %",'Bruttorendite',rend_breaks)}</div></div>
 {src('Bruttorendite: Leverage-Mietschätzung (Jahreskaltmiete) geteilt durch Angebotspreis, Median der Inserate mit Bewertung.')}
 <div class="block"><h3>Alle Städte im Überblick (sortiert nach Preis je m²)</h3>{city_table(rows)}</div>
-{src('Spread: Median Baujahr 1995 bis 2020 minus Median sanierungsbedürftig, nur wo beide Werte vorliegen (mindestens 5 Inserate). ⚠ = unter 10 Inserate, Wert schwankt stärker. Angebot ggü. Marktwert: Positiver Wert heißt teurer angeboten als die Leverage-Bewertung. Radius 5 km, in sehr großen Märkten 2 bis 3 km (Kernstadt). Angebotspreise sind keine Kaufpreise.')}
-{block('Größte Flip-Spanne je m² (mindestens 8 Inserate je Gruppe)', bars([(r['c'], r['spread']) for r in top_spread[:12]], ' €', dec=0, signed=False, lab=200))}
-{block('Höchste Bruttomietrenditen (Median)', bars([(r['c'], r['rend']) for r in top_rend[:12]], ' %', dec=2, signed=False, lab=200, vmin=0))}
-{note(f'Die größten Spannen zwischen sanierungsbedürftigem und gutem Bestand finden sich in {", ".join(r["c"] for r in top_spread[:3])}. Die höchsten Renditen liegen in ostdeutschen Märkten mit niedrigen Preisen je m² wie {", ".join(r["c"] for r in top_rend[:3])}. Dort sind die Inseratszahlen allerdings klein und die Nachfrage durch Abwanderung belastet. In {over_mw} von {len(rows)} Städten liegt der Median der Angebote über der Leverage-Bewertung. Dort lohnt die Preisverhandlung mit dem Bewertungsergebnis in der Hand.')}
+{src('Unsaniert: Zustand laut Inserat sanierungsbedürftig. Bestand: alle Inserate derselben Baujahre 1950 bis 1994. Abschlag: Median Bestand minus Median unsaniert, € je m². Werte nur ab 5 Inseraten je Gruppe und 50 Inseraten je Stadt (sonst –). ⚠ = unter 10 Inserate. Angebot ggü. Marktwert: Positiver Wert heißt teurer angeboten als die Leverage-Bewertung. Tage online: Median, wie lange die aktiven Inserate bereits online sind. Radius siehe Methodik. Angebotspreise sind keine Kaufpreise.')}
+{block('Größter Abschlag unsaniert ggü. Bestand gleicher Baujahre (1950 bis 1994), € je m²', bars([(r['c'], r['spread']) for r in top_spread[:12]], ' €', dec=0, signed=False, lab=200))}
+{src('Nur Städte mit mindestens 8 Inseraten je Gruppe.')}
+{block('Höchste Bruttomietrenditen (Median)', bars([(r['c'], r['rend']) for r in top_rend[:12]], ' %', dec=1, signed=False, lab=200, vmin=0))}
+{block('Marktdynamik: Neue Inserate der letzten 30 Tage je 100 aktive Inserate', bars([(r['c'], r['dyn']) for r in dyn_sorted[:10]] + [(r['c'], r['dyn']) for r in dyn_sorted[-6:]], '', dec=0, signed=False, lab=200, rowh=22, vmin=0))}
+{src('Oben die 10 Städte mit dem höchsten, unten die 6 mit dem niedrigsten Anteil neuer Inserate. Hoher Wert: viel frisches Angebot, niedriger Wert: Bestand steht länger.')}
+{note(f'Die größten Abschläge für unsanierte Wohnungen gegenüber dem Bestand gleicher Baujahre zeigen {spread_top3}. Die höchsten Bruttorenditen liegen in {", ".join(r["c"] for r in top_rend[:3])} bei Preisen von {de(min(r["qm"] for r in top_rend[:3]))} bis {de(max(r["qm"] for r in top_rend[:3]))} € je m² und {de(min(r["n"] for r in top_rend[:3]))} bis {de(max(r["n"] for r in top_rend[:3]))} Inseraten je Stadt. In {over_mw} von {len(rows)} Städten liegt der Median der Angebote über der Leverage-Bewertung.')}
 </section>'''
 
 # ---------- 6 Leistbarkeit ----------
@@ -409,11 +470,11 @@ s6 = f'''<section class="sec"><h2>6 · Leistbarkeit: Was sich der Käufer leiste
       kpi(de(darl_med,-3)+' €','Darlehen daraus',f'{de(bz,2)} % Zins, {de(tilg,2)} % Tilgung'), cols=3)}
 {block('Wie viele m² ein Median-Haushalt allein mit Darlehen finanzieren kann', bars([(r['c'], r['leist_qm']) for r in leist[:12]] + [(r['c'], r['leist_qm']) for r in leist[-8:]], ' m²', dec=0, signed=False, lab=200, rowh=24))}
 {src(f'Rechnung: Darlehen von {de(darl_med,-3)} € geteilt durch Median-Angebotspreis je m² der Stadt. Ohne Eigenkapital und Kaufnebenkosten. Oben die 12 günstigsten, unten die 8 teuersten Märkte der Auswertung. Zum Vergleich: Eine durchschnittliche Wohnung in Deutschland hat {de(Z["flaeche"]["je_wohnung"],1)} m².')}
-{note(f'Ein Haushalt mit Medianeinkommen finanziert in München rund {de(S["München"]["qm"] and darl_med/S["München"]["qm"])} m², in Leipzig rund {de(darl_med/S["Leipzig"]["qm"])} m². Vor einem Jahr wären es bei gleicher Rate {de((darl_med_vj/darl_med-1)*100,1)} % mehr gewesen. In teuren Märkten erreichen deshalb Wohnungen mit 1 bis 2 Zimmern die meisten zahlungsfähigen Haushalte. In günstigen Märkten reicht das Budget für Familienwohnungen.')}
-{block('Wohnkostenbelastung der Haushalte', bars([('Alle Haushalte 2025',Z['wohnkosten']['anteil25']),('Alleinlebende',Z['wohnkosten']['allein']),('Alleinerziehende',Z['wohnkosten']['alleinerz']),('Mieterhaushalte 2022 (Bruttokaltmiete)',Z['mietbelastung']['schnitt'])], ' %', signed=False, lab=280, vmin=0))}
-{src('Quellen: Destatis, Anteil der Wohnkosten am verfügbaren Haushaltseinkommen (EU-SILC 2025); Mietbelastungsquote Mikrozensus 2022.')}
-{block('Mietbelastung nach Haushaltsnettoeinkommen (Mikrozensus 2022)', bars(list(Z['mietbelastung']['nach_einkommen'].items()), ' %', signed=False, lab=200, vmin=0))}
-{note(f'Im Schnitt geben Haushalte {de(Z["wohnkosten"]["anteil25"],1)} % ihres verfügbaren Einkommens für Wohnen aus, {de(Z["wohnkosten"]["ueber40_25"],1)} % der Bevölkerung mehr als 40 %. Mieterhaushalte mit unter 1.500 € Einkommen zahlen {de(Z["mietbelastung"]["nach_einkommen"]["unter 1.500 €"],1)} %. Eigennutzer als Käufer kommen damit überwiegend aus der oberen Einkommenshälfte. Bei Verkauf an Kapitalanleger sollte die angesetzte Miete im Zielquartier tragbar bleiben.')}
+{note(f'Ein Haushalt mit Medianeinkommen finanziert in München rund {de(S["München"]["qm"] and darl_med/S["München"]["qm"])} m², in Leipzig rund {de(darl_med/S["Leipzig"]["qm"])} m². Ohne Eigenkapital reicht das Darlehen in {unter50} von {len(rows)} Städten für weniger als 50 m².')}
+{block('Anteil der Wohnkosten am verfügbaren Haushaltseinkommen (EU-SILC 2025)', bars([('Alle Haushalte',Z['wohnkosten']['anteil25']),('Alleinlebende',Z['wohnkosten']['allein']),('Alleinerziehende',Z['wohnkosten']['alleinerz'])], ' %', signed=False, lab=200, vmin=0))}
+{src('Quelle: Destatis, Anteil der Wohnkosten am verfügbaren Haushaltseinkommen, EU-SILC 2025.')}
+{block(f'Mietbelastung nach Haushaltsnettoeinkommen (Mikrozensus 2022, Durchschnitt {de(Z["mietbelastung"]["schnitt"],1)} %)', bars(list(Z['mietbelastung']['nach_einkommen'].items()), ' %', signed=False, lab=200, vmin=0))}
+{note(f'Im Schnitt geben Haushalte {de(Z["wohnkosten"]["anteil25"],1)} % ihres verfügbaren Einkommens für Wohnen aus, {de(Z["wohnkosten"]["ueber40_25"],1)} % der Bevölkerung mehr als 40 %. Mieterhaushalte mit unter 1.500 € Einkommen zahlen {de(Z["mietbelastung"]["nach_einkommen"]["unter 1.500 €"],1)} %. Bei Verkauf an Kapitalanleger sollte die angesetzte Miete im Zielquartier tragbar bleiben.')}
 </section>'''
 cite('Statistisches Bundesamt', 'Einkommen und Einkommensverteilung, EU-SILC 2025, Tabellenstand 09.04.2026', Z['einkommen']['url'])
 cite('Statistisches Bundesamt', 'Anteil der Wohnkosten am verfügbaren Haushaltseinkommen, Tabellenstand 09.04.2026', Z['wohnkosten']['url'])
@@ -440,7 +501,7 @@ s7 = f'''<section class="sec"><h2>7 · Baukosten, Energie und Regulierung</h2>
 <tr><td class="c">Nationaler CO2-Preis</td><td>Preiskorridor {G['co2']['2026']} € je Tonne für 2026, für 2027 laut Bundestagsbeschluss vom 15.10.2026 ebenfalls {G['co2']['2027']} €.</td></tr>
 <tr><td class="c">EU-Emissionshandel für Gebäude (ETS 2)</td><td>Start um ein Jahr auf {G['co2']['ets2']} verschoben.</td></tr></tbody></table>""")}
 {note(f'Drei Viertel aller Wohnungen heizen mit Gas oder Öl. Mit dem neuen Gesetz entfällt die Pflicht zu 65 % erneuerbarer Wärme bei neuen Heizungen, der Druck kommt künftig über den CO2-Preis und die Grüngasquote ab 2028. Für die Kalkulation: Den Heizungstausch nicht pauschal einplanen, sondern nach Käufergruppe entscheiden. Dach und Elektro sind die Gewerke mit dem stärksten Preisanstieg und sollten früh festgepreist werden.')}
-{block('Rechenbeispiel Baukosten', f'<p>Eine {FX["qm"]}-m²-Wohnung mit {de(FX["san_qm"])} € Sanierungsbudget je m² kostet bei {sg(P["baupreise"]["instand_yoy"])} % Preissteigerung rund <b>{de(fx_san*P["baupreise"]["instand_yoy"]/100)} € mehr</b> als vor einem Jahr. Wohnungspreise sind laut GREIX im selben Zeitraum um {de(abs(P["greix"]["etw_yoy"]),1)} % gesunken. Gleichzeitig wurden 2025 nur {de(Z["fertig"]["2025"])} Wohnungen fertiggestellt, {de(Z["fertig"]["genehmigt_nicht_fertig"])} genehmigte Wohnungen sind noch nicht gebaut. Das Neubauangebot bleibt knapp, sanierter Bestand ist die Alternative.</p>')}
+{block('Rechenbeispiel Baukosten', f'<p>Eine {FX["qm"]}-m²-Wohnung mit {de(FX["san_qm"])} € Sanierungsbudget je m² kostet bei {sg(P["baupreise"]["instand_yoy"])} % Preissteigerung rund <b>{de(fx_san*P["baupreise"]["instand_yoy"]/100)} € mehr</b> als vor einem Jahr. Wohnungspreise sind laut GREIX im selben Zeitraum um {de(abs(P["greix"]["etw_yoy"]),1)} % gesunken. Gleichzeitig wurden 2025 nur {de(Z["fertig"]["2025"])} Wohnungen fertiggestellt, {de(Z["fertig"]["genehmigt_nicht_fertig"])} genehmigte Wohnungen sind noch nicht gebaut.</p>')}
 {src(f'Rechenbeispiel mit angenommenem Budget von {de(FX["san_qm"])} € je m², eigene Berechnung.')}
 </section>'''
 
@@ -462,7 +523,7 @@ s8 = f'''<section class="sec"><h2>8 · Zielgruppe: Haushalte, Einkommen, Wohnfl�
 {block('Wohnfläche Eigentümer und Mieter (Mikrozensus 2022)', f'<table class="t"><thead><tr><th></th><th>je Wohnung</th><th>je Person</th></tr></thead><tbody><tr><td class="c">Eigentümerhaushalte</td><td>{de(Z["flaeche"]["eig_wohnung"],1)} m²</td><td>{de(Z["flaeche"]["eig_person"],1)} m²</td></tr><tr><td class="c">Mieterhaushalte</td><td>{de(Z["flaeche"]["miet_wohnung"],1)} m²</td><td>{de(Z["flaeche"]["miet_person"],1)} m²</td></tr></tbody></table>')}
 {block('Eigentumsquote nach Bundesland (Mikrozensus 2022, Anteil Eigentümerhaushalte)', bars(eig, ' %', signed=False, lab=200, rowh=24, vmin=0))}
 {src('Quelle: Destatis, Eigentumsquote, Mikrozensus Zusatzprogramm Wohnen 2022. Deutschland gesamt '+de(Z['eigentum']['de'],1)+' %.')}
-{note(f'{de(Z["haushalte"]["single"],1)} % aller Haushalte sind Einpersonenhaushalte, weitere {de(Z["haushalte"]["zwei"],1)} % Zweipersonenhaushalte. Eigentümer wohnen auf {de(Z["flaeche"]["eig_wohnung"],1)} m², Mieter auf {de(Z["flaeche"]["miet_wohnung"],1)} m². Wer Eigentumswohnungen für Eigennutzer flippt, trifft mit 2 bis 3 Zimmern und 55 bis 80 m² die größte Käufergruppe, wenn das Budget aus Abschnitt 6 reicht. In Ländern mit niedriger Eigentumsquote wie Berlin, Hamburg und Sachsen ist der Kapitalanleger häufiger der Käufer.')}
+{note(f'{de(Z["haushalte"]["single"],1)} % aller Haushalte sind Einpersonenhaushalte, weitere {de(Z["haushalte"]["zwei"],1)} % Zweipersonenhaushalte. Eigentümer wohnen auf {de(Z["flaeche"]["eig_wohnung"],1)} m², Mieter auf {de(Z["flaeche"]["miet_wohnung"],1)} m². Die niedrigsten Eigentumsquoten haben {", ".join(f"{k} ({de(v,1)} %)" for k, v in eig[-3:][::-1])}, dort wohnt die große Mehrheit zur Miete.')}
 </section>'''
 
 # ---------- 9 Demografie ----------
@@ -476,7 +537,7 @@ cite('Statistisches Bundesamt', 'Bevölkerung 2025, PM Nr. 203 vom 16.06.2026', 
 cite('Argetra GmbH', 'Jahresbericht Zwangsversteigerungen 2025, Januar 2026', G['zv']['url'])
 binnen = sorted(list(G['binnen']['gewinner'].items()) + list(G['binnen']['verlierer'].items()), key=lambda x: -x[1])
 s9 = f'''<section class="sec"><h2>9 · Demografie, Ruhestand und Erben</h2>
-<p class="intro">Die geburtenstarken Jahrgänge 1955 bis 1969 gehen in den Ruhestand. Daraus folgen mehr Verkäufe und mehr Erbfälle mit unsanierten Objekten.</p>
+<p class="intro">Die geburtenstarken Jahrgänge 1955 bis 1969 erreichen bis 2039 das Rentenalter.</p>
 {kpis(kpi(de(G['boomer']['erwerbspersonen_rente_bis_2039'],1)+' Mio.','Erreichen bis 2039 das Rentenalter',f'{G["boomer"]["anteil"]} % aller Erwerbspersonen'),
       kpi(de(G['alter']['ab67_2024'],1)+' Mio.','Menschen ab 67 (2024)',f'bis 2038: {de(G["alter"]["ab67_2038_von"],1)} bis {de(G["alter"]["ab67_2038_bis"],1)} Mio.'),
       kpi(de(G['erbe']['grundvermoegen'],1)+' Mrd. €','Übertragenes Grundvermögen 2025',f'{sg(G["erbe"]["grund_yoy"])} % ggü. 2024'), cols=3)}
@@ -487,17 +548,7 @@ s9 = f'''<section class="sec"><h2>9 · Demografie, Ruhestand und Erben</h2>
 {src('Quelle: Destatis, PM Nr. 184 vom 01.06.2026. Insgesamt 996.000 Umzüge zwischen Bundesländern.')}
 {block('Bevölkerungsentwicklung 2025 nach Region', bars([('Berlin',G['bev25']['berlin']),('Hamburg',G['bev25']['hamburg']),('Westdeutschland',G['bev25']['west']),('Ostdeutschland',G['bev25']['ost']),('Sachsen-Anhalt',G['bev25']['sachsen_anhalt']),('Thüringen',G['bev25']['thueringen'])], lab=220))}
 {src('Quelle: Destatis, PM Nr. 203 vom 16.06.2026.')}
-{note(f'Die Erbschaftsteuerstatistik erfasst nur Fälle oberhalb der Freibeträge, das tatsächliche Volumen ist deutlich höher. Das DIW schätzt für 2002 bis 2017 im Schnitt {de(G["diw"]["wert"])} Mrd. € pro Jahr und hält das für eher unterschätzt. Erbimmobilien sind häufig unsaniert, und die Erben wohnen oft nicht vor Ort. Gleichzeitig verlieren Thüringen und Sachsen-Anhalt Einwohner, Brandenburg, Bayern und Schleswig-Holstein gewinnen. Hohe Renditen in schrumpfenden Regionen gehen mit Leerstandsrisiko beim Exit einher. Die Zahl der Haushalte sinkt laut Destatis bis 2050 auf {de(G["haushalte"]["2050_von"],1)} bis {de(G["haushalte"]["2050_bis"],1)} Mio. (2024: {de(G["haushalte"]["2024"],1)} Mio.).')}
-</section>'''
-
-# ---------- 10 Steuer & Recht ----------
-cite('Bundesministerium der Justiz', '§ 23 EStG, Private Veräußerungsgeschäfte, gesetze-im-internet.de', G['steuer']['p23'])
-cite('Bundesministerium der Finanzen', G['steuer']['bmf'] + ' (Abgrenzung private Vermögensverwaltung und gewerblicher Grundstückshandel)', 'https://datenbank.nwb.de/Dokument/129733/')
-s10 = f'''<section class="sec"><h2>10 · Steuern und Recht für Flipper</h2>
-{block('Die zwei Regeln, die jeder Flipper kennen muss', f"""<table class="t"><tbody>
-<tr><td class="c">Spekulationsfrist (§ 23 EStG)</td><td>Gewinne aus dem Verkauf privater Immobilien sind steuerpflichtig, wenn zwischen Kauf und Verkauf nicht mehr als zehn Jahre liegen. Ausnahme: Ausschließliche Eigennutzung zwischen Kauf und Verkauf oder im Verkaufsjahr und den beiden Jahren davor.</td></tr>
-<tr><td class="c">Drei-Objekt-Grenze</td><td>Wer innerhalb von etwa fünf Jahren mehr als drei Objekte kauft und wieder verkauft, gilt in der Regel als gewerblicher Grundstückshändler. Dann fällt Gewerbesteuer an, und auch die ersten drei Verkäufe zählen mit. Die Grenze ist ein Indiz, keine starre Regel ({G['steuer']['bmf']}).</td></tr></tbody></table>""")}
-{note('Wer regelmäßig flippt, plant von Anfang an mit gewerblichem Grundstückshandel und klärt mit der Steuerberatung, ob die Flips in einer GmbH laufen sollten. Dieser Abschnitt ersetzt keine steuerliche Beratung im Einzelfall.', 'Hinweis')}
+{note(f'Die Erbschaftsteuerstatistik erfasst nur Fälle oberhalb der Freibeträge, das tatsächliche Volumen ist deutlich höher. Das DIW schätzt für 2002 bis 2017 im Schnitt {de(G["diw"]["wert"])} Mrd. € pro Jahr und hält das für eher unterschätzt. 2025 verlieren Thüringen und Sachsen-Anhalt Einwohner, Brandenburg, Bayern und Schleswig-Holstein gewinnen. Die Zahl der Haushalte sinkt laut Destatis bis 2050 auf {de(G["haushalte"]["2050_von"],1)} bis {de(G["haushalte"]["2050_bis"],1)} Mio. (2024: {de(G["haushalte"]["2024"],1)} Mio.).')}
 </section>'''
 
 # ---------- Methodik / Quellen ----------
@@ -507,10 +558,10 @@ for a, b, c in SRC:
         continue
     seen.add((a, b)); src_items.append((a, b, c))
 src_html = ''.join(f'<li>{a} · {b}<br><span class="url">{c}</span></li>' for a, b, c in src_items)
-s11 = f'''<section class="sec brk"><h2>11 · Methodik und Quellen</h2>
+s11 = f'''<section class="sec brk"><h2>10 · Methodik und Quellen</h2>
 <p>Jede Zahl in diesem Report stammt aus einer der unten genannten Quellen oder ist eine nachvollziehbare Berechnung daraus. Annahmen in Rechenbeispielen sind direkt beim Beispiel genannt. Amtliche Daten erscheinen mit Verzögerung, deshalb steht bei jeder Kennzahl der Bezugszeitraum.</p>
-<p><b>Leverage-Angebotsdaten:</b> Aktive Inserate für Eigentumswohnungen zum Kauf aus mehreren Portalen, ohne Fremddatenbanken, Abruf 07.11.2026. Medianwerte je Stadt im Umkreis von 5 km um das Stadtzentrum, in sehr großen Märkten 2 bis 3 km (Kernstadt), damit jede Auswertung auf allen Inseraten des Kreises beruht. Der Zustand stammt aus der Inseratsangabe, das Baujahr aus dem Inserat. Mieten und Marktwerte sind Schätzungen des Leverage-Bewertungsmodells, keine Angebotsmieten. Angebotspreise sind keine Kaufpreise.</p>
-<p><b>Grenzen dieser Ausgabe:</b> Kreisgenaue amtliche Daten zu Wanderung, Alter und Eigentum folgen im Quartalsreport. Für einige Kennzahlen lagen nur Sekundärquellen mit Verweis auf den Herausgeber vor (GREIX-Mietindex, Grunderwerbsteuersätze, Drei-Objekt-Grenze). Sie sind im Quellenverzeichnis so gekennzeichnet.</p>
+<p><b>Leverage-Angebotsdaten:</b> Aktive Inserate für Eigentumswohnungen zum Kauf aus mehreren Portalen, ohne Fremddatenbanken, Abruf 07.11.2026. Medianwerte je Stadt im Umkreis von 5 km um die Stadtmitte. In großen Städten 2 bis 3 km, weil eine Abfrage höchstens 1.000 Inserate zählt. In Städten mit weniger als 150 Inseraten im 5-km-Umkreis 10 km. Der verwendete Radius steht in der Tabelle unter dem Stadtnamen. Der Zustand stammt aus der Inseratsangabe, das Baujahr aus dem Inserat. Mieten und Marktwerte sind Schätzungen des Leverage-Bewertungsmodells, keine Angebotsmieten. Angebotspreise sind keine Kaufpreise.</p>
+<p><b>Grenzen dieser Ausgabe:</b> Kreisgenaue amtliche Daten zu Wanderung, Alter und Eigentum folgen im Quartalsreport. Für einige Kennzahlen lagen nur Sekundärquellen mit Verweis auf den Herausgeber vor (GREIX-Mietindex, Grunderwerbsteuersätze). Sie sind im Quellenverzeichnis so gekennzeichnet.</p>
 <h3>Quellenverzeichnis</h3><ol class="srcl">{src_html}</ol>
 <div class="block avoid"><h3>Rechtlicher Hinweis</h3>
 <p class="legal">Dieser Report dient ausschließlich der allgemeinen Information. Er stellt keine Anlageberatung, Steuerberatung, Rechtsberatung oder Aufforderung zum Kauf oder Verkauf von Immobilien dar. Die Daten wurden sorgfältig aus den genannten Quellen zusammengestellt. Eine Gewähr für Richtigkeit, Vollständigkeit und Aktualität wird nicht übernommen. Vergangene Entwicklungen sind kein verlässlicher Indikator für künftige Entwicklungen. Investitionsentscheidungen triffst du eigenverantwortlich, idealerweise nach individueller Prüfung durch Fachleute. Daten der Deutschen Bundesbank und des Statistischen Bundesamts unterliegen der Datenlizenz Deutschland, Namensnennung, Version 2.0.</p>
@@ -562,7 +613,14 @@ HEADER = f'''<div style="width:100%;padding:0 17mm;font-family:Arial;font-size:7
 FOOTER = f'''<div style="width:100%;padding:0 17mm;font-family:Arial;font-size:7px;color:{MUT};display:flex;justify-content:space-between;align-items:center;-webkit-print-color-adjust:exact">
 <img src="data:image/png;base64,{LOGO_T}" style="height:9px"/><span>Keine Anlage-, Steuer- oder Rechtsberatung. Alle Angaben ohne Gewähr.</span><span><span class="pageNumber"></span> / <span class="totalPages"></span></span></div>'''
 
-html = f'<!doctype html><html lang="de"><head><meta charset="utf-8"><style>{css}</style></head><body>{cover}{s1}{s2}{s3}{s4}{s5}{s6}{s7}{s8}{s9}{s10}{s11}</body></html>'
+def feinschliff(h):
+    import re
+    h = re.sub(r'(?<=\d) (?=(%|€|m²|Mrd\.|Mio\.|Tage|km)(?![\w]))', '\u00a0', h)
+    h = re.sub(r'(?<=\d) (?=Prozentpunkte)', '\u00a0', h)
+    h = h.replace('CO2', 'CO₂')
+    return h
+html = f'<!doctype html><html lang="de"><head><meta charset="utf-8"><style>{css}</style></head><body>{cover}{s1}{s2}{s3}{s4}{s5}{s6}{s7}{s8}{s9}{s11}</body></html>'
+html = feinschliff(html)
 (R/'out').mkdir(exist_ok=True)
 (R/'out'/f'report_{MONTH}.html').write_text(html)
 out = R/'out'/f'Immobilienhandel-Marktreport-{MONTH}.pdf'
@@ -573,4 +631,10 @@ with sync_playwright() as p:
            header_template=HEADER, footer_template=FOOTER,
            margin=dict(top='24mm', bottom='20mm', left='17mm', right='17mm'))
     b.close()
+import pymupdf
+_d = pymupdf.open(str(out))
+_p = _d[0]
+_p.draw_rect(pymupdf.Rect(0, 0, _p.rect.width, 24 * 72 / 25.4 - 2), color=None, fill=(1, 1, 1), overlay=True)
+_d.saveIncr()
+_d.close()
 print('ok', len(rows), n_total, round(kaufkraft, 2), round(darl_med), [(r['c'], r['spread']) for r in top_spread[:5]])

@@ -17,6 +17,18 @@ REGELN = [
     (r"\b(entscheidend|essenziell|maßgeblich|nahtlos|ganzheitlich)\b", "KI-Vokabular"),
     (r"\b(Lass uns|Schauen wir uns)\b", "Belehrender Einstieg"),
     (r"\bFlipperversum\b", "Flipperversum"),
+    (r"\blohnt (sich )?(die|der|das|ein)\b", "Werbe- oder Ratgebersatz (lohnt ...)"),
+    (r"\b(jeder|jede) Flipper\w* kennen muss\b", "Slogan"),
+    (r"\bist die Alternative\b", "Slogan"),
+    (r"\bsehr unterschiedlich\b", "Leerformel"),
+    (r"\bbleibt knapp\b", "unbelegte Prognose"),
+    (r"\+\s?\d[\d.,]*\s?%\s+mehr\b", "Doppelt gemoppelt (+X % mehr)"),
+    (r"\bin der Hand\b", "Redewendung"),
+    (r"\b(häufig|oft|meist|typischerweise) (unsaniert|nicht vor Ort)\b", "Unbelegte Verallgemeinerung"),
+    (r"\bFlip-Spanne\b", "Begriff Flip-Spanne (misst nicht Vorher/Nachher, siehe STYLE.md)"),
+    (r"\bCO2\b", "CO2 statt CO₂"),
+    (r"(?<![\w−+])-\d", "Bindestrich statt Minuszeichen vor Zahl"),
+    (r"\d,\d{1,2}\s?€", "Euro mit Nachkommastellen"),
 ]
 # Kleinschreibung direkt nach Doppelpunkt (Hausregel: immer groß weiter), Uhrzeiten und Zahlen ausgenommen
 DOPPELPUNKT = re.compile(r":\s+([a-zäöü][a-zäöüß]+)")
