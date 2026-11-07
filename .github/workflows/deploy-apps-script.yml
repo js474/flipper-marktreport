@@ -1,0 +1,28 @@
+name: Apps Script deployen
+
+on:
+  push:
+    branches: [main]
+    paths: ['apps-script/**']
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Syntaxcheck
+        run: |
+          cd apps-script
+          for f in *.gs; do node -e "new Function(require('fs').readFileSync('$f','utf8'))" || { echo "::error::Syntaxfehler in $f"; exit 1; }; done
+      - name: clasp push + Deployment aktualisieren
+        env:
+          CLASPRC_JSON: ${{ secrets.CLASPRC_JSON }}
+        run: |
+          if [ -z "$CLASPRC_JSON" ]; then echo "::error::Secret CLASPRC_JSON fehlt, Deploy übersprungen"; exit 1; fi
+          echo "$CLASPRC_JSON" > ~/.clasprc.json
+          npm i -g @google/clasp@2 >/dev/null
+          cd apps-script
+          clasp push -f
+          clasp deploy -i AKfycbyvHha131hHSwzH0Wq55Lw0w448oPh7aENy91596Tx6wlvH1Ab8gLBPqeSfOPE9MvnZJQ -d "GitHub ${GITHUB_SHA::7}"
+          echo "::notice::Apps Script deployt (${GITHUB_SHA::7})"

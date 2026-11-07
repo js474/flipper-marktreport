@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+<base target="_top">
+<style>
+  body{margin:0;background:#f3f7f7;font-family:Arial,Helvetica,sans-serif;color:#1d2b2c}
+  .box{max-width:520px;margin:48px auto;background:#fff;border-radius:12px;padding:32px 28px;box-shadow:0 2px 12px rgba(0,0,0,.06)}
+  h1{font-size:22px;margin:0 0 12px;color:#3e7b80}
+  p{font-size:16px;line-height:1.6}
+  button{background:#3e7b80;color:#fff;border:0;border-radius:6px;padding:14px 24px;font-size:16px;font-weight:bold;cursor:pointer}
+  button:disabled{opacity:.6;cursor:default}
+  .msg{margin-top:18px;font-weight:bold}
+  @media (max-width:560px){.box{margin:16px;padding:24px 18px}}
+</style>
+</head>
+<body>
+<div class="box">
+  <h1>Immobilienhandel-Marktreport</h1>
+  <? if (sub) { ?>
+    <p>Bleib für <?= preis ?> statt 19 € im Monat dabei. Ein Klick nimmt deine Kündigung zurück, ab der nächsten Abrechnung zahlst du <?= preis ?>.</p>
+    <button id="b" onclick="los()">Für <?= preis ?> im Monat dabeibleiben</button>
+    <p class="msg" id="m"></p>
+    <script>
+      function los(){
+        var b=document.getElementById('b'), m=document.getElementById('m');
+        b.disabled=true; m.textContent='Einen Moment …';
+        google.script.run
+          .withSuccessHandler(function(r){ m.textContent=r.msg; if(r.ok) b.style.display='none'; else b.disabled=false; })
+          .withFailureHandler(function(){ m.textContent='Das hat nicht geklappt. Schreib uns an report@flipperimmo.com.'; b.disabled=false; })
+          .bleibenBestaetigen('<?= sub ?>','<?= t ?>');
+      }
+    </script>
+  <? } else { ?>
+    <p>Der Link ist ungültig oder abgelaufen. Schreib uns an report@flipperimmo.com.</p>
+  <? } ?>
+  <p style="font-size:13px;color:#5f6e6f;margin-top:28px">Team Flipper · <a href="https://www.flipperimmo.com" style="color:#3e7b80">www.flipperimmo.com</a></p>
+</div>
+</body>
+</html>
