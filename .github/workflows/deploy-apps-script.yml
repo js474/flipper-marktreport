@@ -19,7 +19,7 @@ jobs:
         env:
           CLASPRC_JSON: ${{ secrets.CLASPRC_JSON }}
         run: |
-          if [ -z "$CLASPRC_JSON" ]; then echo "::error::Secret CLASPRC_JSON fehlt, Deploy übersprungen"; exit 1; fi
+          if [ -z "$CLASPRC_JSON" ]; then echo "::warning::Secret CLASPRC_JSON fehlt, Deploy übersprungen"; exit 0; fi
           echo "$CLASPRC_JSON" > ~/.clasprc.json
           npm i -g @google/clasp@2 >/dev/null
           cd apps-script
