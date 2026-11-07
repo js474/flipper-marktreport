@@ -12,11 +12,33 @@ SERIES = {
 out = {'quelle': 'Deutsche Bundesbank, MFI-Zinsstatistik, Effektivzinssätze Neugeschäft, Wohnungsbaukredite an private Haushalte',
        'url': 'https://www.bundesbank.de/de/statistiken/geld-und-kapitalmaerkte/zinssaetze-und-renditen/wohnungsbaukredite-an-private-haushalte-hypothekarkredite-615036',
        'reihen': {}}
+def hole(s):
+    fehler = []
+    for fmt in ('sdmx_csv', 'csv'):
+        u = f'https://api.statistiken.bundesbank.de/rest/data/BBIM1/{s}?format={fmt}&lastNObservations=13&lang=en'
+        try:
+            txt = urllib.request.urlopen(urllib.request.Request(u, headers={'User-Agent': 'marktreport/1.0'}), timeout=60).read().decode('utf-8-sig')
+        except Exception as e:
+            fehler.append(f'{fmt}: {e}'); continue
+        sep = ';' if txt.count(';') > txt.count(',') else ','
+        rows = list(csv.reader(io.StringIO(txt), delimiter=sep))
+        pts = []
+        for r in rows:
+            if len(r) >= 2 and len(r[0]) == 7 and r[0][4] == '-':
+                try: pts.append((r[0], float(r[1].replace(',', '.'))))
+                except ValueError: pass
+        if not pts and rows:
+            hdr = rows[0]
+            if 'TIME_PERIOD' in hdr and 'OBS_VALUE' in hdr:
+                ti, vi = hdr.index('TIME_PERIOD'), hdr.index('OBS_VALUE')
+                pts = [(r[ti], float(r[vi])) for r in rows[1:] if len(r) > vi and r[vi] not in ('', '.')]
+        if pts:
+            return pts[-13:]
+        fehler.append(f'{fmt}: keine Werte, Anfang: {txt[:200]!r}')
+    raise RuntimeError(' | '.join(fehler))
+
 for k, s in SERIES.items():
-    u = f'https://api.statistiken.bundesbank.de/rest/data/BBIM1/{s}?format=sdmx_csv&lastNObservations=13'
-    txt = urllib.request.urlopen(urllib.request.Request(u, headers={'Accept': 'text/csv'}), timeout=60).read().decode('utf-8')
-    rows = list(csv.DictReader(io.StringIO(txt)))
-    pts = [(r['TIME_PERIOD'], float(r['OBS_VALUE'])) for r in rows if r.get('OBS_VALUE') not in (None, '', '.')]
+    pts = hole(s)
     if len(pts) < 6:
         sys.exit(f'Bundesbank-Reihe {k} zu kurz: {len(pts)} Werte')
     out['reihen'][k] = pts
