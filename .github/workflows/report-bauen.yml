@@ -36,7 +36,8 @@ jobs:
           echo "::notice::Monat $M"
       - name: Bundesbank-Monatsreihen holen
         env: { REPORT_MONTH: '${{ steps.m.outputs.monat }}' }
-        run: python pipeline/data/bundesbank.py 2>err.txt || echo "::warning::Bundesbank-Abruf fehlgeschlagen, Zinsverlauf entfällt: $(tail -c 600 err.txt | tr '\n' ' ')"
+        run: |
+          python pipeline/data/bundesbank.py 2>err.txt || echo "::warning::Bundesbank-Abruf fehlgeschlagen, Zinsverlauf entfällt: $(tail -c 600 err.txt | tr '\n' ' ')"
       - name: Quellencheck
         run: python pipeline/qa/quellencheck.py ${{ steps.m.outputs.monat }}
       - name: PDF bauen
