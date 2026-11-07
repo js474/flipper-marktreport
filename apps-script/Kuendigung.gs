@@ -1,7 +1,7 @@
 /** ---------- Kündigung: Bestätigung + Bleib-Angebot 9 € ---------- */
 
-const BLEIB_COUPON = 'ANSNFdHv';   // 10 € Rabatt dauerhaft, 19 € -> 9 €
-const BLEIB_PREIS = '9 €';
+const BLEIB_COUPON = 'Et8OIoxs';   // Flipper 50 % dauerhaft, 19 € -> 9,50 € (gleich wie Partner-Code)
+const BLEIB_PREIS = '9,50 €';
 
 function bleibSecret_() {
   let s = PROPS.getProperty('BLEIB_SECRET');

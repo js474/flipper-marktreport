@@ -1,9 +1,7 @@
 name: Apps Script deployen
 
+# Nur manuell, bis das Secret CLASPRC_JSON gesetzt ist (sonst Fehlermails bei jedem Push).
 on:
-  push:
-    branches: [main]
-    paths: ['apps-script/**']
   workflow_dispatch:
 
 jobs:
