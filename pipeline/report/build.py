@@ -1,15 +1,16 @@
-import json, base64, math, pathlib
+import json, base64, math, pathlib, os
 from playwright.sync_api import sync_playwright
 
-R = pathlib.Path(__file__).parent
-D = R / 'data'
-P = json.load(open(D/'public_2026-11-07.json'))
-F = json.load(open(D/'v2/fin.json'))
-Z = json.load(open(D/'v2/zg.json'))
-G = json.load(open(D/'v2/demo.json'))
+R = pathlib.Path(__file__).resolve().parents[2]   # Repo-Wurzel
+MONTH = os.environ.get('REPORT_MONTH', '2026-11')
+D = R / 'data' / 'snapshots' / MONTH
+P = json.load(open(D/'public.json'))
+F = json.load(open(D/'fin.json'))
+Z = json.load(open(D/'zg.json'))
+G = json.load(open(D/'demo.json'))
 S = {}
 for f in ['lev_sued', 'lev_west', 'lev_nord', 'lev_ost']:
-    p = D/f'v2/{f}.json'
+    p = D/f'{f}.json'
     if p.exists():
         S.update(json.load(open(p)))
 
@@ -87,7 +88,7 @@ over_mw = sum(1 for r in rows if r['disc'] < 0)
 
 KPI = dict(kaufkraft=kaufkraft, rate_now=rate_now, rate_vj=rate_vj, darl_med=darl_med, flip_by=flip_by, flip_nw=flip_nw,
            buy_by=buy_by, buy_nw=buy_nw, n_total=n_total, staedte=len(rows))
-json.dump(KPI, open(D/'v2/kpi.json', 'w'), ensure_ascii=False, indent=1, default=float)
+json.dump(KPI, open(D/'kpi.json', 'w'), ensure_ascii=False, indent=1, default=float)
 
 # ======================= Grafik-Bausteine =======================
 def svg(w, h, inner):
@@ -563,8 +564,8 @@ FOOTER = f'''<div style="width:100%;padding:0 17mm;font-family:Arial;font-size:7
 
 html = f'<!doctype html><html lang="de"><head><meta charset="utf-8"><style>{css}</style></head><body>{cover}{s1}{s2}{s3}{s4}{s5}{s6}{s7}{s8}{s9}{s10}{s11}</body></html>'
 (R/'out').mkdir(exist_ok=True)
-(R/'out/report_v2.html').write_text(html)
-out = R/'out/Immobilienhandel-Marktreport-2026-11.pdf'
+(R/'out'/f'report_{MONTH}.html').write_text(html)
+out = R/'out'/f'Immobilienhandel-Marktreport-{MONTH}.pdf'
 with sync_playwright() as p:
     b = p.chromium.launch(); pg = b.new_page()
     pg.set_content(html, wait_until='networkidle')

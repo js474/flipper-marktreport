@@ -1,0 +1,77 @@
+name: Report bauen und ausliefern
+
+# Läuft, wenn der Monats-Agent neue Daten oder Texte pusht (data/snapshots/<MONAT>/ oder pipeline/report/).
+# Baut das PDF, prüft Stil, Quellen und Umfang, legt es in ausgaben/ ab und übergibt es an den Versand (Apps Script).
+on:
+  push:
+    branches: [main]
+    paths: ['data/snapshots/**', 'pipeline/report/**']
+  workflow_dispatch:
+    inputs:
+      monat: { description: 'Monat YYYY-MM (leer = neuester Snapshot)', required: false }
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - name: Abhängigkeiten
+        run: |
+          npm ci --silent || npm i --silent
+          pip install -q playwright pymupdf
+          python -m playwright install --with-deps chromium >/dev/null
+      - name: Monat bestimmen
+        id: m
+        run: |
+          M="${{ github.event.inputs.monat }}"
+          [ -z "$M" ] && M=$(ls data/snapshots | sort | tail -1)
+          echo "monat=$M" >> $GITHUB_OUTPUT
+          echo "::notice::Monat $M"
+      - name: Quellencheck
+        run: python pipeline/qa/quellencheck.py ${{ steps.m.outputs.monat }}
+      - name: PDF bauen
+        env: { REPORT_MONTH: '${{ steps.m.outputs.monat }}' }
+        run: python pipeline/report/build.py
+      - name: Stilcheck und Umfang
+        run: |
+          F=out/Immobilienhandel-Marktreport-${{ steps.m.outputs.monat }}.pdf
+          python pipeline/qa/stilcheck.py "$F"
+          python - <<PY
+          import pymupdf, sys
+          d = pymupdf.open("$F")
+          n = d.page_count
+          print(f"::notice::{n} Seiten")
+          sys.exit(0 if 14 <= n <= 30 else 1)
+          PY
+      - name: Komprimieren und ablegen
+        run: |
+          M=${{ steps.m.outputs.monat }}
+          python - <<PY
+          import pymupdf
+          d = pymupdf.open("out/Immobilienhandel-Marktreport-$M.pdf"); d.subset_fonts()
+          d.save("ausgaben/Immobilienhandel-Marktreport-$M.pdf", garbage=4, deflate=True)
+          PY
+          git config user.name "marktreport-bot"; git config user.email "actions@users.noreply.github.com"
+          git add ausgaben/ data/snapshots/$M/kpi.json
+          git commit -m "Ausgabe $M gebaut [skip ci]" || echo "keine Änderung"
+          git push
+      - name: An Versand übergeben
+        env:
+          UPLOAD_URL: https://script.google.com/macros/s/AKfycbyvHha131hHSwzH0Wq55Lw0w448oPh7aENy91596Tx6wlvH1Ab8gLBPqeSfOPE9MvnZJQ/exec
+          KEY: ${{ secrets.REPORT_UPLOAD_SECRET }}
+        run: |
+          N=Immobilienhandel-Marktreport-${{ steps.m.outputs.monat }}.pdf
+          python -c "import json,base64;json.dump({'name':'$N','data':base64.b64encode(open('ausgaben/$N','rb').read()).decode()},open('/tmp/p.json','w'))"
+          for i in 1 2 3; do
+            R=$(curl -sL --data @/tmp/p.json -H 'Content-Type: application/json' "$UPLOAD_URL?upload=1&key=$KEY")
+            echo "$R" | grep -q '"ok":true' && { echo "::notice::Versand übernommen: $R"; exit 0; }
+            sleep 20
+          done
+          echo "::error::Upload fehlgeschlagen: $R"; exit 1
