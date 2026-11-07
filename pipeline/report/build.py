@@ -283,7 +283,7 @@ kurz_leverage = ''
 if robust:
     kurz_leverage += f"<li>Unsanierte Wohnungen der Baujahre 1950 bis 1994 werden je nach Stadt {de(min(r['spread'] for r in robust))} bis {de(max(r['spread'] for r in robust))} € je m² günstiger angeboten als der Bestand gleicher Baujahre ({len(robust)} Städte mit mindestens 8 Inseraten je Gruppe).</li>"
 if tage_rows:
-    kurz_leverage += f"<li>Die Hälfte der Inserate ist je nach Stadt seit {de(min(r['tage'] for r in tage_rows))} bis {de(max(r['tage'] for r in tage_rows))} Tagen online. In den letzten 30 Tagen kamen {de(sum(r.get('neu30') or 0 for r in rows))} neue Inserate in den {len(rows)} Städten dazu.</li>"
+    kurz_leverage += f"<li>Die Hälfte der Inserate ist je nach Stadt seit {de(min(r['tage'] for r in tage_rows))} bis {de(max(r['tage'] for r in tage_rows))} Tagen online. Am längsten stehen Inserate in {', '.join(f"{x['c']} ({de(x['tage'])} Tage)" for x in sorted(tage_rows, key=lambda x: -x['tage'])[:3])}.</li>"
 # ---------- Cover ----------
 cover = f'''<section class="cover-page">
 <div class="cover"><img class="clogo" src="data:image/png;base64,{LOGO_W}"/>
@@ -441,7 +441,7 @@ def city_table(rs):
             f'<th>Abschlag unsaniert</th><th>Brutto&shy;rendite</th><th>Angebot ggü. Marktwert</th><th>Tage online</th>' + ('<th>Preis Δ Vormonat</th>' if PREV else '') + f'</tr></thead><tbody>{body}</tbody></table>')
 half = (len(rows) + 1) // 2
 spread_top3 = ', '.join(f"{x['c']} ({de(x['spread'])} €)" for x in top_spread[:3])
-dyn_sorted = sorted([r for r in rows if r['dyn'] is not None], key=lambda r: -r['dyn'])
+tage_sorted = sorted(tage_rows, key=lambda r: -r['tage'])
 s5 = f'''<section class="sec"><h2>5 · Angebotsmarkt Deutschland: {len(rows)} Städte</h2>
 <p class="intro">Auswertung aus der Leverage-Datenbank: {de(n_total)} aktive Wohnungsinserate, abgerufen am 07.11.2026. Medianwerte im Umkreis um die Stadtmitte.</p>
 {kpis(kpi(de(n_total),'Ausgewertete Inserate',f'{len(rows)} Städte, alle Bundesländer'),
@@ -456,8 +456,8 @@ s5 = f'''<section class="sec"><h2>5 · Angebotsmarkt Deutschland: {len(rows)} St
 {block('Größter Abschlag unsaniert ggü. Bestand gleicher Baujahre (1950 bis 1994), € je m²', bars([(r['c'], r['spread']) for r in top_spread[:12]], ' €', dec=0, signed=False, lab=200))}
 {src('Nur Städte mit mindestens 8 Inseraten je Gruppe.')}
 {block('Höchste Bruttomietrenditen (Median)', bars([(r['c'], r['rend']) for r in top_rend[:12]], ' %', dec=1, signed=False, lab=200, vmin=0))}
-{block('Marktdynamik: Neue Inserate der letzten 30 Tage je 100 aktive Inserate', bars([(r['c'], r['dyn']) for r in dyn_sorted[:10]] + [(r['c'], r['dyn']) for r in dyn_sorted[-6:]], '', dec=0, signed=False, lab=200, rowh=22, vmin=0))}
-{src('Oben die 10 Städte mit dem höchsten, unten die 6 mit dem niedrigsten Anteil neuer Inserate. Hoher Wert: viel frisches Angebot, niedriger Wert: Bestand steht länger.')}
+{block('Wie lange Wohnungen online sind (Median der aktiven Inserate, Tage)', bars([(r['c'], r['tage']) for r in tage_sorted[:10]] + [(r['c'], r['tage']) for r in tage_sorted[-6:]], ' Tage', dec=0, signed=False, lab=200, rowh=22, vmin=0))}
+{src('Oben die 10 Städte mit den ältesten, unten die 6 mit den jüngsten Inseraten. Gemessen ab Erstveröffentlichung des Inserats. Angebotspreise im Inserat können seit der Veröffentlichung gesenkt worden sein.')}
 {note(f'Die größten Abschläge für unsanierte Wohnungen gegenüber dem Bestand gleicher Baujahre zeigen {spread_top3}. Die höchsten Bruttorenditen liegen in {", ".join(r["c"] for r in top_rend[:3])} bei Preisen von {de(min(r["qm"] for r in top_rend[:3]))} bis {de(max(r["qm"] for r in top_rend[:3]))} € je m² und {de(min(r["n"] for r in top_rend[:3]))} bis {de(max(r["n"] for r in top_rend[:3]))} Inseraten je Stadt. In {over_mw} von {len(rows)} Städten liegt der Median der Angebote über der Leverage-Bewertung.')}
 </section>'''
 

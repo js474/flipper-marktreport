@@ -44,7 +44,7 @@ Je Stadt (Schlüssel im JSON):
 3. `alt_n`, `alt`: ALT.
 4. `altsan_n`, `altsan`: ALT + [SAN].
 5. `rend_n`, `rend`, `disc`: [REND], Median `rental_yield_gross_market` in % (2 NK); auf derselben Teilmenge Median `market_discount_pct` in % (positiv = unter Marktwert).
-6. `neu30`: Count mit `crawled_since` = Abrufdatum minus 30 Tage.
+6. `neu30`: nicht mehr verwenden (crawled_since misst den letzten Crawl, nicht die Erstveröffentlichung).
 7. `tage`: Median `days_online` (order_by `start_date`, offset floor(n/2)).
 8. `lat`, `lon` aus `resolved_location`, `r` = Radius.
 €/m² ganzzahlig.
