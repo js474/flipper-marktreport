@@ -15,6 +15,7 @@ jobs:
           UPLOAD_SECRET: ${{ secrets.REPORT_UPLOAD_SECRET }}
         run: |
           set -e
+          echo "::notice::URL gesetzt: ${#UPLOAD_URL} Zeichen, Secret gesetzt: ${#UPLOAD_SECRET} Zeichen"
           FILE=$(ls ausgaben/Fix-und-Flip-Marktreport-*.pdf | sort | tail -1)
           NAME=$(basename "$FILE")
           python3 - "$FILE" "$NAME" > payload.json << 'PY'
@@ -22,8 +23,8 @@ jobs:
           print(json.dumps({"name": sys.argv[2], "data": base64.b64encode(open(sys.argv[1], "rb").read()).decode()}))
           PY
           for i in 1 2 3; do
-            RES=$(curl -sS -L -H "Content-Type: application/json" --data @payload.json "$UPLOAD_URL?upload=1&key=$UPLOAD_SECRET" || true)
-            echo "::notice::Versuch $i Antwort: $(echo "$RES" | head -c 300)"
+            RES=$(curl -sS -L -w "\nHTTP %{http_code} nach %{num_redirects} Redirects" -H "Content-Type: application/json" --data @payload.json "$UPLOAD_URL?upload=1&key=$UPLOAD_SECRET" 2>&1 || true)
+            echo "::notice::Versuch $i: $(echo "$RES" | tr '\n' ' ' | head -c 400)"
             echo "$RES" | grep -q '"ok":true' && exit 0
             sleep $((i*20))
           done
