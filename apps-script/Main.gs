@@ -77,7 +77,7 @@ function handleEvent_(event) {
         promo: obj.discounts && obj.discounts[0] ? (obj.discounts[0].promotion_code || obj.discounts[0].coupon || '') : '',
         start: new Date(event.created * 1000)
       });
-      sendWelcome_(obj.customer_details.email, obj.customer_details.name);
+      sendWelcome_(obj.customer_details.email, obj.customer_details.name, obj.subscription);
       break;
     case 'customer.subscription.updated':
     case 'customer.subscription.deleted':
@@ -133,7 +133,7 @@ function activeSubscribers_() {
   const sh = sheet_(CONFIG.sheetAbos);
   const rows = sh.getDataRange().getValues();
   const now = new Date();
-  return rows.slice(1).map((r, i) => ({ rowIndex: i + 2, email: r[1], name: r[2], status: r[5], end: r[9] }))
+  return rows.slice(1).map((r, i) => ({ rowIndex: i + 2, email: r[1], name: r[2], status: r[5], end: r[9], last: r[11] }))
     .filter(x => x.email && CONFIG.activeStatus.indexOf(x.status) >= 0 || (x.status === 'canceled' && x.end && new Date(x.end) > now));
 }
 
@@ -142,6 +142,28 @@ function logWebhook_(status, info, eventId) {
 }
 
 /** ---------- Ausgaben und Versand ---------- */
+/** Alle Ausgaben im Ordner, neueste zuerst. */
+function allIssues_() {
+  const files = DriveApp.getFolderById(CONFIG.pdfFolderId).getFilesByType(MimeType.PDF);
+  const list = [];
+  while (files.hasNext()) {
+    const f = files.next();
+    const m = ISSUE_RE.exec(f.getName());
+    if (m) list.push({ f: f, key: m[1] + m[2] + '|' + f.getLastUpdated().toISOString(), y: Number(m[1]), mo: Number(m[2]) });
+  }
+  list.sort((a, b) => (a.key < b.key ? 1 : -1));
+  const seen = {};
+  return list.filter(x => { const k = x.y + '-' + x.mo; if (seen[k]) return false; seen[k] = 1; return true; });
+}
+
+/** Erschienen = schon an alle verschickt oder Versandtermin (15., 9 Uhr) erreicht. Neue Abos bekommen nichts vor dem offiziellen Termin. */
+function publishedIssues_() {
+  const now = new Date();
+  const all = allIssues_();
+  const pub = all.filter(x => issueAlreadySent_(x.f.getName()) || now >= new Date(x.y, x.mo - 1, CONFIG.sendDay, CONFIG.sendHour));
+  return (pub.length ? pub : all.slice(0, 1)).map(x => x.f);
+}
+
 function latestIssue_() {
   const files = DriveApp.getFolderById(CONFIG.pdfFolderId).getFilesByType(MimeType.PDF);
   let best = null, bestKey = '';
@@ -167,6 +189,7 @@ function sendMonthlyReport() {
   const subs = activeSubscribers_();
   let sent = 0;
   subs.forEach(s => {
+    if (s.last === file.getName()) return;   // hat die Ausgabe schon mit der Willkommensmail bekommen
     try {
       sendIssueMail_(s.email, s.name, file, false);
       const sh = sheet_(CONFIG.sheetAbos);
@@ -179,9 +202,16 @@ function sendMonthlyReport() {
   console.log('Ausgabe ' + file.getName() + ' an ' + sent + ' von ' + subs.length + ' versendet');
 }
 
-function sendWelcome_(email, name) {
-  const file = latestIssue_();
-  sendIssueMail_(email, name, file, true);
+/** Willkommensmail mit den letzten zwei erschienenen Ausgaben (Goodie), damit niemand bis zum nächsten 15. wartet. */
+function sendWelcome_(email, name, subscriptionId) {
+  const files = publishedIssues_().slice(0, 2);
+  sendIssueMail_(email, name, files, true);
+  if (subscriptionId && files.length) {
+    const sh = sheet_(CONFIG.sheetAbos);
+    const rows = sh.getDataRange().getValues();
+    const i = rows.findIndex((x, k) => k > 0 && x[4] === subscriptionId);
+    if (i > 0) { sh.getRange(i + 1, 11).setValue(new Date()); sh.getRange(i + 1, 12).setValue(files[0].getName()); }
+  }
 }
 
 function issueLabel_(fileName) {
@@ -205,7 +235,9 @@ function mailSignatur_() {
   return '<p>Viel Spass damit,</p><p>Johannes &amp; Team Flipper<br><a href="' + CONFIG.website + '" style="' + LINK + '">www.flipperimmo.com</a></p>';
 }
 
-function sendIssueMail_(email, name, file, welcome) {
+function sendIssueMail_(email, name, fileOrFiles, welcome) {
+  const files = Array.isArray(fileOrFiles) ? fileOrFiles : (fileOrFiles ? [fileOrFiles] : []);
+  const file = files[0] || null;
   const label = file ? issueLabel_(file.getName()) : '';
   const vorname = name ? String(name).trim().split(' ')[0] : '';
   const anrede = vorname ? 'Hallo ' + vorname + ',' : 'Hallo,';
@@ -214,7 +246,9 @@ function sendIssueMail_(email, name, file, welcome) {
     : 'dein Immobilienhandel Marktreport: Ausgabe ' + label;
   const body = welcome
     ? '<p>' + anrede + '<br>danke für dein Abo und dein Vertrauen.</p>' +
-      '<p>Im Anhang liegt die aktuelle Ausgabe des Immobilienhandel-Marktreports. Jede neue Ausgabe kommt automatisch an diese Adresse, sobald sie erscheint.<br>' +
+      (files.length > 1
+        ? '<p>Im Anhang liegen die aktuelle Ausgabe (' + label + ') und als Extra die Ausgabe ' + issueLabel_(files[1].getName()) + ' des Immobilienhandel-Marktreports. Jede neue Ausgabe kommt automatisch an diese Adresse, sobald sie erscheint.<br>'
+        : '<p>Im Anhang liegt die aktuelle Ausgabe des Immobilienhandel-Marktreports. Jede neue Ausgabe kommt automatisch an diese Adresse, sobald sie erscheint.<br>') +
       '(Da wir auf viele wichtige Daten warten, meistens am 15. des Folgemonats.)</p>'
     : '<p>' + anrede + '</p>' +
       '<p>im Anhang liegt die neue Ausgabe des Immobilienhandel-Marktreports für ' + label + '.</p>';
@@ -222,7 +256,7 @@ function sendIssueMail_(email, name, file, welcome) {
     body + mailSignatur_() + mailFooter_() + '</div>';
   const opts = { htmlBody: html, name: CONFIG.senderName, replyTo: CONFIG.replyTo };
   if (aliasAvailable_()) opts.from = CONFIG.fromAlias;
-  if (file) opts.attachments = [file.getAs(MimeType.PDF)];
+  if (files.length) opts.attachments = files.map(f => f.getAs(MimeType.PDF));
   GmailApp.sendEmail(email, subject, 'Im Anhang liegt der Immobilienhandel-Marktreport. Abo beenden oder verwalten: ' + CONFIG.portalUrl, opts);
 }
 
