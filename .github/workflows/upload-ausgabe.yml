@@ -1,7 +1,7 @@
 name: Ausgabe an Versand übergeben
 on:
   push:
-    paths: ['ausgaben/*.pdf']
+    paths: ['ausgaben/*.pdf', '.github/workflows/upload-ausgabe.yml']
   workflow_dispatch:
 jobs:
   upload:
@@ -22,8 +22,8 @@ jobs:
           print(json.dumps({"name": sys.argv[2], "data": base64.b64encode(open(sys.argv[1], "rb").read()).decode()}))
           PY
           for i in 1 2 3; do
-            RES=$(curl -sS -L -X POST -H "Content-Type: application/json" --data @payload.json "$UPLOAD_URL?upload=1&key=$UPLOAD_SECRET" || true)
-            echo "Antwort: $RES"
+            RES=$(curl -sS -L -H "Content-Type: application/json" --data @payload.json "$UPLOAD_URL?upload=1&key=$UPLOAD_SECRET" || true)
+            echo "::notice::Versuch $i Antwort: $(echo "$RES" | head -c 300)"
             echo "$RES" | grep -q '"ok":true' && exit 0
             sleep $((i*20))
           done
