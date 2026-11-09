@@ -9,7 +9,7 @@ from pytrends.request import TrendReq
 out = {'quelle': 'Google Trends, Suchinteresse Deutschland, wöchentlich, Index 0 bis 100 je Begriff (100 = Höchstwert im Zeitraum)',
        'url': 'https://trends.google.de/trends/explore?geo=DE&q=' + ','.join(b.replace(' ', '%20') for b in BEGRIFFE),
        'zeitraum': 'today 12-m', 'reihen': {}}
-pt = TrendReq(hl='de-DE', tz=60, timeout=(10, 30), retries=3, backoff_factor=2)
+pt = TrendReq(hl='de-DE', tz=60, timeout=(10, 30))   # ohne retries-Parameter (inkompatibel mit urllib3 2.x)
 for b in BEGRIFFE:
     for versuch in range(3):
         try:
