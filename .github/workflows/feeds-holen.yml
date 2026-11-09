@@ -1,0 +1,31 @@
+name: Feeds holen
+on:
+  workflow_dispatch:
+    inputs:
+      monat:
+        description: Berichtsmonat JJJJ-MM (leer = Vormonat)
+        required: false
+  schedule:
+    - cron: '17 5 11 * *'   # am 11. um 05:17 UTC, einen Tag vor dem Monats-Agenten
+permissions:
+  contents: write
+jobs:
+  feeds:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - id: m
+        run: |
+          M="${{ github.event.inputs.monat }}"
+          [ -z "$M" ] && M=$(date -u -d "$(date -u +%Y-%m-01) -1 month" +%Y-%m)
+          echo "monat=$M" >> "$GITHUB_OUTPUT"
+      - name: Feeds lesen
+        run: REPORT_MONTH=${{ steps.m.outputs.monat }} python pipeline/data/feeds.py
+      - name: Einchecken
+        run: |
+          git config user.name "marktreport-bot"; git config user.email "actions@users.noreply.github.com"
+          git add data/snapshots/${{ steps.m.outputs.monat }}/feeds.json
+          git commit -m "Feeds ${{ steps.m.outputs.monat }} gelesen [skip ci]" || echo "keine Änderung"
+          git pull --rebase -q origin main || true; git push
