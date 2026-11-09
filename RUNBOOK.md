@@ -17,7 +17,7 @@ Ausgeführt vom Monats-Agenten (geplante Aufgabe in der Claude-Cloud, am 12. jed
 
 Quellen je Datei (erste Wahl, jeweils neueste Veröffentlichung):
 - `public.json`: Bundesbank MFI-Zinsstatistik (Bauzins >10 J., Neugeschäft), EZB-Beschlüsse, Bundesbank Rendite Bund 10 J., GREIX (Kiel Institut), Europace EPX, Destatis Häuserpreisindex, Baupreisindex, Baugenehmigungen, Wanderung, VPI, Zensus-Leerstand.
-- `fin.json`: Bundesbank Geldmarktsätze (Euribor 3M/6M, €STR), MFI-Zinsstatistik Wohnungsbau nach Zinsbindung und Unternehmenskredite, Bank Lending Survey, Dr. Klein Trendindikator Baufinanzierung, KfW-Merkblätter 308 und 261, Grunderwerbsteuer je Land, Notarkosten (Verbraucherzentrale).
+- `fin.json`: Bundesbank Geldmarktsätze (Euribor 1M/3M/6M/12M Tageswert und Monatsdurchschnitte, €STR; API `https://api.statistiken.bundesbank.de/rest/data/BBIG1/D.D0.EUR.MMKT.EURIBOR.M12.BID._Z?format=json&lastNObservations=5`, Monatsmittel `M.D0.EUR.MMKT.EURIBOR.M12.AVE.MA`; Werte prüfen, 1M/3M/6M/12M nicht verwechseln), MFI-Zinsstatistik Wohnungsbau nach Zinsbindung und Unternehmenskredite, Bank Lending Survey, Dr. Klein Trendindikator Baufinanzierung, KfW-Merkblätter 308 und 261, Grunderwerbsteuer je Land, Notarkosten (Verbraucherzentrale).
 - `zg.json`: Destatis Wohnkostenanteil, Mietbelastung, Einkommen (EU-SILC), Reallöhne, BA Arbeitsmarkt, Eigentumsquote, Wohnfläche, Baufertigstellungen, Haushalte, Heizungsart.
 - `demo.json`: Demografie, Erbschaften, DIW, Bevölkerungsprognose, Binnenwanderung, Mieten (GREIX-Miete, VPI Nettokalt), CO2-Preis, GEG, Zwangsversteigerungen, Steuerregeln.
 - Zusätzlich lesen (für Kurzfassung und Einordnung, nur mit Quelle zitieren): bulwiengesa (https://www.bulwiengesa.de/feed/), Bundesbank- und Destatis-Pressemitteilungen, ifo, vdp-Index.
@@ -50,6 +50,7 @@ Je Stadt (Schlüssel im JSON):
 €/m² ganzzahlig.
 
 ## Schritt 3: build.py anpassen
+- Referenzzins für variable Flipper-Darlehen ist der **12-Monats-Euribor** (nicht 3M). KPI „Flipper-Zins“ = 12M-Euribor + `flipper_aufschlag` (2,0 und 2,5 Prozentpunkte, beide zeigen). 3M/6M nur als Kontext. Die 12M-Monatsreihe kommt aus `bbk.json` (`eur12`, holt `pipeline/data/bundesbank.py` im Workflow).
 - Alle Datums- und Monatsangaben (Titelseite "Ausgabe NN · Stand", Header, KPI-Untertitel, Quellen-Zitate mit Stand, Abrufdatum Leverage) auf den neuen Stand. Ausgabenummer hochzählen.
 - Abschnitt „Neu in Recht und Steuern“: Nur wenn es seit dem Vormonat neue Urteile (BFH, BGH), BMF-Schreiben oder Gesetze mit Bezug zu Immobilienhandel, Grunderwerbsteuer, gewerblichem Grundstückshandel oder Förderung gibt. Dann als `recht_neu` (Liste mit titel, datum, kern, url) in `demo.json` und als eigenes Kapitel vor Methodik einbauen. Sonst entfällt das Kapitel.
 - Vormonatsvergleich: Für jede Stadt Preis, Inserate, Rendite und Tage online gegen den Vormonats-Snapshot rechnen und in Tabelle (Spalte Δ Vormonat) und Kurzfassung zeigen.

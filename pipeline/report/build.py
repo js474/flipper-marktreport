@@ -303,7 +303,7 @@ cover = f'''<section class="cover-page">
 <h2 class="first">Die Lage in sechs Zahlen</h2>
 {kpis(
  kpi(de(bz,2)+' %', 'Bauzins über 10 Jahre', f'Sep 2026, Vorjahr {de(bz_vj,2)} %'),
- kpi(de(F['euribor']['m3'],2)+' %', '3-Monats-Euribor', f'05.11.2026, Nov 2025 Ø {de(F["euribor"]["m3_nov25"],2)} %'),
+ kpi(de(F['euribor']['m12'],2)+' %', '12-Monats-Euribor', f'{F["euribor"]["datum"]}, Nov 2025 Ø {de(F["euribor"]["m12_nov25"],2)} %'),
  kpi(de(kaufkraft,1)+' %', 'Darlehensbudget Käufer', 'bei gleicher Rate wie vor 12 Monaten'),
  cols=3)}
 {kpis(
@@ -328,29 +328,41 @@ cover = f'''<section class="cover-page">
 </section>'''
 
 # ---------- 1 Zinsen ----------
+zins_verlauf = ''; euribor_verlauf = ''
 if BBK:
     _pts = [(mlabel(t), v) for t, v in BBK['reihen']['j10']]
     _lo = math.floor(min(v for _, v in _pts) * 5) / 5 - 0.2; _hi = math.ceil(max(v for _, v in _pts) * 5) / 5 + 0.2
     zins_verlauf = block(f'Bauzins über 10 Jahre, letzte {len(_pts)} Monate', line_chart(_pts, _lo, _hi, dec=2)) + src('Quelle: Deutsche Bundesbank, MFI-Zinsstatistik, Zeitreihe ' + BBK['reihen_id_j10'] + ', Monatswerte.')
-else:
-    zins_verlauf = ''
+    if 'eur12' in BBK['reihen']:
+        _ep = [(mlabel(t), v) for t, v in BBK['reihen']['eur12']]
+        _lo = math.floor(min(v for _, v in _ep) * 5) / 5 - 0.2; _hi = math.ceil(max(v for _, v in _ep) * 5) / 5 + 0.2
+        euribor_verlauf = block(f'12-Monats-Euribor, Monatsdurchschnitte, letzte {len(_ep)} Monate', line_chart(_ep, _lo, _hi, dec=2)) + src('Quelle: Deutsche Bundesbank, Geldmarktsätze (EMMI), Zeitreihe ' + BBK['reihen_id_eur12'] + '.')
+EU = F['euribor']
+fz = [EU['m12'] + a for a in EU['flipper_aufschlag']]
+fz_vj = [EU['m12_nov25'] + a for a in EU['flipper_aufschlag']]
 mw, mv = F['mfi_wohnen']['sep26'], F['mfi_wohnen']['sep25']
 cite('Deutsche Bundesbank', 'MFI-Zinsstatistik, Wohnungsbaukredite an private Haushalte nach Zinsbindung, Stand 02.11.2026', F['mfi_wohnen']['url'])
 cite('Deutsche Bundesbank', 'MFI-Zinsstatistik, Kredite an nichtfinanzielle Kapitalgesellschaften, Stand 02.11.2026', F['mfi_unternehmen']['url'])
-cite('Deutsche Bundesbank', 'Geldmarktsätze, Euribor (Quelle EMMI), Stand 06.11.2026', F['euribor']['url'])
+cite('Deutsche Bundesbank', 'Geldmarktsätze, Euribor (Quelle EMMI), Tageswerte 05.11.2026 und Monatsdurchschnitte', F['euribor']['url'])
 cite('Europäische Zentralbank', 'Geldpolitische Beschlüsse vom 29.10.2026', P['ezb']['url'])
 s1 = f'''<section class="sec brk"><h2>1 · Zinsen und Finanzierungsumfeld</h2>
 <p class="intro">Variable Zinsen bestimmen die Kosten der Projektfinanzierung, Zinsen mit 10 Jahren Bindung das Budget der Käuferinnen und Käufer.</p>
 {kpis(kpi(de(bz,2)+' %','Bauzins über 10 Jahre','Sep 2026, Bundesbank'),
       kpi(de(mw['var'],2)+' %','Wohnungsbaukredit variabel','bis 1 Jahr Zinsbindung, Sep 2026'),
       kpi(de(F['mfi_unternehmen']['bis1mio_var_sep26'],2)+' %','Unternehmenskredit variabel','bis 1 Mio. €, Sep 2026'), cols=3)}
-{kpis(kpi(de(F['euribor']['m3'],2)+' %','3-Monats-Euribor','Tageswert 05.11.2026'),
-      kpi(de(F['euribor']['m6'],2)+' %','6-Monats-Euribor','Tageswert 05.11.2026'),
+{kpis(kpi(de(EU['m12'],2)+' %','12-Monats-Euribor','Referenz für variable Flipper-Darlehen, '+EU['datum']),
+      kpi(de(fz[0],2)+' %','Flipper-Zins bei 2,0 % Aufschlag','12-Monats-Euribor + 2,0 Prozentpunkte'),
+      kpi(de(fz[1],2)+' %','Flipper-Zins bei 2,5 % Aufschlag','12-Monats-Euribor + 2,5 Prozentpunkte'), cols=3)}
+{kpis(kpi(de(EU['m3'],2)+' %','3-Monats-Euribor','Tageswert '+EU['datum']),
+      kpi(de(EU['m6'],2)+' %','6-Monats-Euribor','Tageswert '+EU['datum']),
       kpi(de(P['ezb']['einlage'],2)+' %','EZB-Einlagesatz','zuletzt am 29.10. unverändert'), cols=3)}
+{euribor_verlauf}
+{block('Flipper-Zins (Rechenbeispiel): 12-Monats-Euribor plus Bankaufschlag', f'<p>Variable Projektfinanzierungen für Fix-und-Flip-Vorhaben werden in der Praxis am 12-Monats-Euribor ausgerichtet, die Bank schlägt je nach Bonität, Eigenkapital und Objekt meist 2,0 bis 2,5 Prozentpunkte auf. Beim Stand vom {EU["datum"]} ergibt das {de(fz[0],2)} % bis {de(fz[1],2)} % Zins. Vor einem Jahr (Monatsdurchschnitt November 2025: {de(EU["m12_nov25"],2)} %) lag dieselbe Rechnung bei {de(fz_vj[0],2)} % bis {de(fz_vj[1],2)} %. Je 100.000 € Fremdkapital und Monat Haltedauer kostet das heute {de(round(fz[0]*1000/12))} € bis {de(round(fz[1]*1000/12))} € Zins.</p>')}
+{src('Quelle: Deutsche Bundesbank, Geldmarktsätze (Euribor, Quelle EMMI). Aufschlag 2,0 bis 2,5 Prozentpunkte: Erfahrungswert Team Flippɘr aus Finanzierungen, kein Marktdurchschnitt. Das konkrete Angebot der Bank weicht ab.')}
 {block('Effektivzins Wohnungsbaukredite nach Zinsbindung, Sep 2025 und Sep 2026', grouped(['variabel bis 1 J.','1 bis 5 J.','5 bis 10 J.','über 10 J.'],[mv['var'],mv['j1_5'],mv['j5_10'],mv['j10']],[mw['var'],mw['j1_5'],mw['j5_10'],mw['j10']],'September 2025','September 2026'))}
 {src('Quelle: Deutsche Bundesbank, MFI-Zinsstatistik, Neugeschäft, Effektivzinssatz.')}
 {zins_verlauf}
-{note(f'Der 3-Monats-Euribor, an dem variable Darlehen und viele Projektfinanzierungen hängen, liegt bei {de(F["euribor"]["m3"],2)} % nach {de(F["euribor"]["m3_nov25"],2)} % im Durchschnitt November 2025. Das sind {de(F["euribor"]["m3"]-F["euribor"]["m3_nov25"],2)} Prozentpunkte mehr. Die EZB hat den Einlagesatz am 10.09.2026 auf {de(P["ezb"]["einlage"],2)} % erhöht. Variable Wohnungsbaukredite sind mit {de(mw["var"],2)} % teurer als Kredite mit 5 bis 10 Jahren Bindung ({de(mw["j5_10"],2)} %).')}
+{note(f'Der 12-Monats-Euribor, Referenz für variable Flipper-Darlehen, liegt bei {de(EU["m12"],2)} % nach {de(EU["m12_nov25"],2)} % im Durchschnitt November 2025. Das sind {de(EU["m12"]-EU["m12_nov25"],2)} Prozentpunkte mehr. Der 3-Monats-Euribor steht bei {de(EU["m3"],2)} % (November 2025 Ø {de(EU["m3_nov25"],2)} %). Die EZB hat den Einlagesatz am 10.09.2026 auf {de(P["ezb"]["einlage"],2)} % erhöht. Variable Wohnungsbaukredite sind mit {de(mw["var"],2)} % teurer als Kredite mit 5 bis 10 Jahren Bindung ({de(mw["j5_10"],2)} %).')}
 {block('Kreditvergabe der Banken (Bank Lending Survey, Q3 2026)', f'<p>Die Banken haben ihre Kreditstandards für private Wohnungsbaukredite im dritten Quartal leicht gelockert (Nettoanteil {de(F["bls"]["standards_q3"])} %, nach {sg(F["bls"]["standards_q2"],0)} % im Vorquartal). Die Nachfrage ist das zweite Quartal in Folge deutlich gesunken, die Ablehnungsraten sind weiter gestiegen. Für das vierte Quartal erwarten die Banken unveränderte Standards und einen weiter sinkenden Finanzierungsbedarf.</p>')}
 {src('Quelle: Deutsche Bundesbank, Bank Lending Survey, veröffentlicht 27.10.2026.')}
 </section>'''
