@@ -772,21 +772,22 @@ if FEEDS and FEEDS.get('meldungen'):
     def _rang(m):
         q = m['quelle']
         return next((i for i, p_ in enumerate(_prio) if p_.lower() in q.lower()), len(_prio))
-    _ml = [m for m in FEEDS['meldungen'] if m.get('datum')]
+    _ml = [m for m in FEEDS['meldungen'] if m.get('datum') and m.get('titel_treffer', True)]
     _auswahl = sorted(_ml, key=lambda m: (_rang(m), m['datum']), reverse=False)
     # je Quelle höchstens 2, insgesamt 14, dann nach Datum absteigend
     _seen = {}; _pick = []
     for m in sorted(_auswahl, key=lambda m: (_rang(m), -int(m['datum'].replace('-', '')))):
         if _seen.get(m['quelle'], 0) >= 2: continue
         _seen[m['quelle']] = _seen.get(m['quelle'], 0) + 1; _pick.append(m)
-        if len(_pick) >= 14: break
+        if len(_pick) >= 16: break
     _pick.sort(key=lambda m: m['datum'], reverse=True)
-    _li = ''.join(f'<li><span class="fd">{m["datum"][8:10]}.{m["datum"][5:7]}.</span> <b>{m["quelle"]}:</b> {m["titel"]}<br><span class="url">{m["link"]}</span></li>' for m in _pick)
+    def _tt(t): return re.sub(r'\s+[–—]\s+', ', ', t).replace('–', '-').replace('—', '-')
+    _li = ''.join(f'<li><span class="fd">{m["datum"][8:10]}.{m["datum"][5:7]}.</span> <b>{m["quelle"]}:</b> {_tt(m["titel"])}<br><span class="url">{m["link"]}</span></li>' for m in _pick)
     _fq = ', '.join(f['quelle'] for f in FEEDS['feeds_ok'])
-    s_feeds = f'''<section class="sec"><h2>{{NR_FEEDS}} · Meldungen des Monats</h2>
+    s_feeds = f'''<section class="sec"><h2>§ · Meldungen des Monats</h2>
 <p class="intro">Automatisch gelesen aus {len(FEEDS['feeds_ok'])} Nachrichten-Feeds seit dem {FEEDS['zeitraum_ab'][8:10]}.{FEEDS['zeitraum_ab'][5:7]}.{FEEDS['zeitraum_ab'][:4]}, gefiltert auf Immobilien, Zinsen, Bau und Haushalte. {len(FEEDS['meldungen'])} relevante Meldungen, hier die wichtigsten {len(_pick)}.</p>
 <ol class="srcl feeds">{_li}</ol>
-{src('Gelesene Feeds: ' + _fq + '. Stand ' + FEEDS['stand'][8:10] + '.' + FEEDS['stand'][5:7] + '.' + FEEDS['stand'][:4] + '. Überschriften im Wortlaut der Herausgeber.')}
+{src('Gelesene Feeds: ' + _fq + '. Stand ' + FEEDS['stand'][8:10] + '.' + FEEDS['stand'][5:7] + '.' + FEEDS['stand'][:4] + '. Überschriften der Herausgeber, Gedankenstriche durch Kommas ersetzt.')}
 </section>'''
     cite('Diverse Herausgeber', f'Pressemitteilungen und Meldungen aus {len(FEEDS["feeds_ok"])} RSS-Feeds, Zeitraum ab {FEEDS["zeitraum_ab"]}, siehe Kapitel Meldungen des Monats', 'siehe Einzellinks im Kapitel')
 

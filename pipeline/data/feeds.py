@@ -46,6 +46,9 @@ WORTE = re.compile(r'immobil|wohnung|wohnungsbau|baugenehm|baupreis|bauzins|bauf
                    r'kredit|darlehen|inflation|verbraucherpreis|reallohn|einkommen|haushalte|privathaushalt|bevölkerung|zuwander|wanderung|'
                    r'erbschaft|vermögen|kfw|förder', re.I)
 
+KERN = re.compile(r'immobil|wohn|\bbau|miet|kaufpreis|hauspreis|häuserpreis|eigentum|eigenheim|grunderwerb|grundsteuer|zins|euribor|hypothek|'
+                  r'zwangsversteig|insolvenz|sanier|gebäude|wärmepumpe|heizung|erbschaft|haushalte|bevölkerung|zuwander|konsumklima|'
+                  r'kredit|darlehen|inflation|verbraucherpreis|reallohn|makler|notar|grundbuch|baugenehm|fertigstell', re.I)
 AUSSCHLUSS = re.compile(r'tender|bubill|schatzanweisung|bundesanleihe|aufstockung|podcast|webinar|veranstaltung|stellenangebot|smart city|'
                         r'jobs?\b|karriere|gewinnspiel|newsletter|sommerfest|jubiläum|plastiksteuer|fußball', re.I)
 
@@ -111,7 +114,8 @@ def hole(name, url):
         d = datum(text(it, 'pubDate', '{http://purl.org/dc/elements/1.1/}date', '{http://www.w3.org/2005/Atom}updated', '{http://www.w3.org/2005/Atom}published'))
         z = text(it, 'description', '{http://www.w3.org/2005/Atom}summary', '{http://www.w3.org/2005/Atom}content')[:400]
         if t and l:
-            out.append({'quelle': name, 'titel': t, 'link': l, 'datum': d.date().isoformat() if d else None, 'teaser': z})
+            from urllib.parse import urljoin
+            out.append({'quelle': name, 'titel': t, 'link': urljoin(url, l), 'datum': d.date().isoformat() if d else None, 'teaser': z})
     return out
 
 _titel_gesehen = set()
@@ -130,6 +134,7 @@ for name, url in FEEDS:
         if AUSSCHLUSS.search(e['titel']):
             continue
         if WORTE.search(e['titel'] + ' ' + e['teaser']) and e['titel'] not in _titel_gesehen:
+            e['titel_treffer'] = bool(KERN.search(e['titel']))
             _titel_gesehen.add(e['titel']); ergebnis['meldungen'].append(e)
 
 ergebnis['meldungen'].sort(key=lambda x: x['datum'] or '', reverse=True)
