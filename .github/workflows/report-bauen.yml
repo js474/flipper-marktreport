@@ -65,7 +65,7 @@ jobs:
           git config user.name "marktreport-bot"; git config user.email "actions@users.noreply.github.com"
           git rm -q --cached --ignore-unmatch ausgaben/.loeschen || true; git add -A ausgaben/ data/snapshots/$M/kpi.json; [ -f data/snapshots/$M/bbk.json ] && git add data/snapshots/$M/bbk.json
           git commit -m "Ausgabe $M gebaut [skip ci]" || echo "keine Änderung"
-          git push
+          git pull --rebase -q origin main || true; git push || (git pull --rebase -q origin main && git push)
       - name: An Versand übergeben
         env:
           UPLOAD_URL: https://script.google.com/macros/s/AKfycbyvHha131hHSwzH0Wq55Lw0w448oPh7aENy91596Tx6wlvH1Ab8gLBPqeSfOPE9MvnZJQ/exec
