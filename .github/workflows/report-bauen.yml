@@ -41,7 +41,7 @@ jobs:
       - name: Google Trends holen
         env: { REPORT_MONTH: '${{ steps.m.outputs.monat }}' }
         run: |
-          python pipeline/data/trends.py 2>err.txt || echo "::warning::Google-Trends-Abruf fehlgeschlagen, Block entfällt: $(tail -c 600 err.txt | tr '\n' ' ')"
+          timeout 240 python pipeline/data/trends.py 2>err.txt || echo "::warning::Google-Trends-Abruf fehlgeschlagen, Block entfällt: $(tail -c 600 err.txt | tr '\n' ' ')"
       - name: Feeds prüfen
         run: |
           test -f data/snapshots/${{ steps.m.outputs.monat }}/feeds.json || echo "::warning::feeds.json fehlt für ${{ steps.m.outputs.monat }} (Workflow 'Feeds holen' ausführen)"
