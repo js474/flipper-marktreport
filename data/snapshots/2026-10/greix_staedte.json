@@ -1,0 +1,123 @@
+{
+ "staedte": {
+  "Berlin": {
+   "qm": null,
+   "yoy": -2.94,
+   "q": "Q3 2026"
+  },
+  "Hamburg": {
+   "qm": 6500,
+   "yoy": -3.71,
+   "q": "Q4 2024"
+  },
+  "München": {
+   "qm": 8800,
+   "yoy": -0.42,
+   "q": "Q2 2026"
+  },
+  "Köln": {
+   "qm": 5000,
+   "yoy": 4.56,
+   "q": "Q3 2026"
+  },
+  "Frankfurt": {
+   "qm": 5800,
+   "yoy": 2.39,
+   "q": "Q3 2026"
+  },
+  "Stuttgart": {
+   "qm": 4400,
+   "yoy": -2.45,
+   "q": "Q3 2026"
+  },
+  "Düsseldorf": {
+   "qm": 5000,
+   "yoy": 1.5,
+   "q": "Q3 2026"
+  },
+  "Leipzig": {
+   "qm": 4300,
+   "yoy": 0.61,
+   "q": "Q3 2026"
+  },
+  "Dresden": {
+   "qm": 3200,
+   "yoy": 8.61,
+   "q": "Q3 2025"
+  },
+  "Dortmund": {
+   "qm": 2500,
+   "yoy": -0.09,
+   "q": "Q3 2026"
+  },
+  "Bochum": {
+   "qm": 2400,
+   "yoy": 3.19,
+   "q": "Q3 2026"
+  },
+  "Duisburg": {
+   "qm": 2300,
+   "yoy": 6.71,
+   "q": "Q3 2026"
+  },
+  "Bonn": {
+   "qm": 3900,
+   "yoy": 1.01,
+   "q": "Q2 2026"
+  },
+  "Münster": {
+   "qm": 4900,
+   "yoy": 3.71,
+   "q": "Q3 2026"
+  },
+  "Karlsruhe": {
+   "qm": 3700,
+   "yoy": -1.81,
+   "q": "Q3 2026"
+  },
+  "Wiesbaden": {
+   "qm": 4000,
+   "yoy": 1.49,
+   "q": "Q4 2025"
+  },
+  "Lübeck": {
+   "qm": 3800,
+   "yoy": 2.5,
+   "q": "Q3 2026"
+  },
+  "Erfurt": {
+   "qm": 2500,
+   "yoy": -2.06,
+   "q": "Q3 2026"
+  },
+  "Potsdam": {
+   "qm": 4700,
+   "yoy": -5.72,
+   "q": "Q3 2026"
+  },
+  "Chemnitz": {
+   "qm": 1800,
+   "yoy": -3.44,
+   "q": "Q3 2025"
+  }
+ },
+ "gesamt": {
+  "qm": 4600,
+  "yoy": -0.17,
+  "q": "Q3 2026"
+ },
+ "bund_q3": {
+  "etw_qoq": 0.5,
+  "etw_yoy": -0.2,
+  "etw_yoy_real": -3.0,
+  "efh_yoy": 0.9,
+  "mfh_yoy": -2.4,
+  "vermarktungsdauer_etw_tage": 94,
+  "anteil_preissenkung_etw": 22.4,
+  "transaktionen_etw_q2_yoy": -1.7
+ },
+ "preisbegriff": "qm = Durchschnittspreis je m² Wohnfläche aller bereinigten Transaktionen (Neubau und Bestand), auf 100 € gerundet, nominal. yoy = hedonischer GREIX-Transaktionspreisindex ggü. Vorjahresquartal.",
+ "quelle": "Kiel Institut für Weltwirtschaft, GREIX Q3 2026 (veröffentlicht 05.11.2026), Städtewerte aus der GREIX-Datenschnittstelle (api.greixx.net), abgerufen 09.11.2026",
+ "url": "https://www.greix.de/download",
+ "url_pm": "https://www.kielinstitut.de/media/news/apartment-prices-below-prior-year-level-for-the-first-time-in-more-than-two-years/"
+}

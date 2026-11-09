@@ -312,6 +312,30 @@ if tage_rows:
 _unter = sorted([r for r in rows if r['unter_pct'] is not None and (r.get('unter_basis') or 0) >= 50], key=lambda r: -r['unter_pct'])
 unter_block = (block('Anteil der Angebote unter Leverage-Marktwert (Inserate mit Bewertung, ab 50 je Stadt)', bars([(r['c'], r['unter_pct']) for r in _unter[:10]] + [(r['c'], r['unter_pct']) for r in _unter[-6:]], ' %', dec=0, lab=200, signed=False, vmin=0, rowh=22))
                + src(f'Anteil der Inserate, deren Angebotspreis auf oder unter dem Leverage-Marktwert liegt. Oben die 10 Städte mit dem höchsten Anteil, unten die 6 mit dem niedrigsten. Über alle {len(rows)} Städte: {de(sum(r["unter_n"] for r in rows if r.get("unter_n", -1) >= 0) / max(1, sum(r["unter_basis"] for r in rows if r.get("unter_basis"))) * 100)} %.')) if _unter else ''
+GX = json.load(open(D/'greix_staedte.json')) if (D/'greix_staedte.json').exists() else None
+ZS = json.load(open(D/'zensus.json')) if (D/'zensus.json').exists() else None
+greix_block = ''; alt_block = ''
+if GX:
+    cite('Kiel Institut für Weltwirtschaft', 'GREIX Q3 2026, Städtewerte (Transaktionspreise je m², hedonischer Index) aus der GREIX-Datenschnittstelle, abgerufen 09.11.2026', GX['url'])
+    _gx = []
+    for r in rows:
+        g_ = GX['staedte'].get(r['c'])
+        if g_ and g_['qm'] and g_['q'] in ('Q3 2026', 'Q2 2026'):
+            r['greix_qm'] = g_['qm']; r['greix_q'] = g_['q']; r['greix_yoy'] = g_['yoy']
+            r['gap_greix'] = (r['qm'] / g_['qm'] - 1) * 100
+            _gx.append(r)
+    _gx.sort(key=lambda r: -r['gap_greix'])
+    if _gx:
+        greix_block = (block('Angebotspreis (Leverage, Median) gegenüber Transaktionspreis (GREIX, Durchschnitt), Abweichung in %',
+                             bars([(f"{r['c']} ({de(r['qm'])} vs. {de(r['greix_qm'])} €)", r['gap_greix']) for r in _gx], ' %', dec=0, lab=250, rowh=22))
+                       + src('GREIX: Durchschnittspreis je m² aller notariell beurkundeten Wohnungskäufe (Neubau und Bestand), auf 100 € gerundet, Q3 2026 (München, Bonn: Q2 2026). Leverage: Median der aktiven Angebote im Stadtkreis. Positiver Wert: Angebote liegen über den zuletzt gezahlten Preisen. Nur Städte, für die GREIX aktuelle Werte liefert.'))
+if ZS:
+    cite('Statistische Ämter des Bundes und der Länder', 'Zensus 2022, Tabelle 3000G-1002, Gebäude mit Wohnraum nach Baujahr, Gemeindeebene', ZS['url'])
+    for r in rows:
+        r['vor1979'] = ZS['vor1979'].get(r['c'])
+    _za = sorted([r for r in rows if r.get('vor1979') is not None], key=lambda r: -r['vor1979'])
+    alt_block = (block('Anteil der Wohngebäude mit Baujahr bis 1979 (Zensus 2022), %', bars([(r['c'], r['vor1979']) for r in _za[:10]] + [(r['c'], r['vor1979']) for r in _za[-6:]], ' %', dec=0, lab=200, signed=False, vmin=0, rowh=22))
+                 + src(f'Quelle: Zensus 2022, Stichtag 15.05.2022, Gebäude mit Wohnraum je Gemeinde. Oben die 10 ältesten Bestände, unten die 6 jüngsten. Gebäude bis 1979 fallen vor die erste Wärmeschutzverordnung und sind der typische Sanierungsbestand. Spanne über alle {len(_za)} Städte: {de(_za[-1]["vor1979"],1)} % ({_za[-1]["c"]}) bis {de(_za[0]["vor1979"],1)} % ({_za[0]["c"]}).'))
 _sp = sorted(rows, key=lambda r: -r['spread_eur'])
 spread_block = (block(f'Bruttorendite minus 12-Monats-Euribor ({de(F["euribor"]["m12"],2)} %), Prozentpunkte', bars([(r['c'], r['spread_eur']) for r in _sp[:10]] + [(r['c'], r['spread_eur']) for r in _sp[-6:]], ' Pp', dec=1, lab=200, rowh=22))
                 + src(f'Median-Bruttorendite der Stadt abzüglich 12-Monats-Euribor. Unter 2,0 bis 2,5 Prozentpunkten trägt die Miete den Flipper-Zins nicht; Halten statt Verkaufen rechnet sich dann nicht. {sum(1 for r in rows if r["spread_eur"] < 2.5)} von {len(rows)} Städten liegen unter 2,5 Prozentpunkten.'))
@@ -551,6 +575,8 @@ s5 = f'''<section class="sec"><h2>§ · Angebotsmarkt Deutschland: {len(rows)} S
 {tage_block}
 {unter_block}
 {spread_block}
+{greix_block}
+{alt_block}
 {note(f'Die größten Abschläge für unsanierte Wohnungen gegenüber dem Bestand gleicher Baujahre zeigen {spread_top3}. Die höchsten Bruttorenditen liegen in {", ".join(r["c"] for r in top_rend[:3])} bei Preisen von {de(min(r["qm"] for r in top_rend[:3]))} bis {de(max(r["qm"] for r in top_rend[:3]))} € je m² und {de(min(r["n"] for r in top_rend[:3]))} bis {de(max(r["n"] for r in top_rend[:3]))} Inseraten je Stadt. In {over_mw} von {len(rows)} Städten liegt der Median der Angebote über der Leverage-Bewertung.')}
 
 <div class="block avoid"><h3>Median-Angebotspreis Eigentumswohnungen, € je m²</h3><div class="mapw">{de_map(rows,'qm',lambda v: de(v),'€ je m²',qm_breaks)}</div></div>
@@ -599,6 +625,9 @@ if MK:
 {kpis(kpi(de(_zv['h1'][-1][1]),'Zwangsversteigerungen 1. Hj. 2026',f'{sg(_zv["h1_2026_yoy"])} % ggü. Vorjahr, Ø Verkehrswert {de(_zv["h1_2026_vw_mittel"],-3)} €'),
       kpi(sg(_bg['jan_aug_yoy'])+' %','Baugenehmigungen Jan bis Aug 2026',f'{de(_bg["jan_aug_2026"])} Wohnungen, Neubau Aug {sg(_bg["aug_neubau_yoy"])} %'),
       kpi(de(_ex['transaktion']['q3_2026'],2)+' Mrd. €','Finanzierungsvolumen Europace Q3',f'Vorjahr {de(_ex["transaktion"]["q3_2025"],2)} Mrd. €'), cols=3)}
+{kpis(kpi(de(GX['bund_q3']['vermarktungsdauer_etw_tage'])+' Tage','Vermarktungsdauer Eigentumswohnungen','GREIX Q3 2026, Median bis Beurkundung') if GX else '',
+      kpi(de(GX['bund_q3']['anteil_preissenkung_etw'],1)+' %','Verkäufe mit vorheriger Preissenkung','GREIX Q3 2026, Eigentumswohnungen') if GX else '',
+      kpi(sg(GX['bund_q3']['transaktionen_etw_q2_yoy'],1)+' %','Zahl der Wohnungskäufe','GREIX Q2 2026 ggü. Vorjahr') if GX else '', cols=3) if GX else ''}
 {kpis(kpi(sg(_is['bestand_etw']['yoy'])+' %','Angebotspreise Bestandswohnungen',f'ImmoScout24 Q3 2026 ggü. Vorjahr, {de(_is["bestand_etw"]["qm"])} €/m²'),
       kpi(sg(_vd['etw_yoy'])+' %','Transaktionspreise Eigentumswohnungen',f'vdp {_vd["quartal"]} ggü. Vorjahr (Pfandbriefbanken)'),
       kpi(sg(_ex['etw'][2],2)+' %','Europace EPX Eigentumswohnungen',f'{_ex["monat"]} ggü. Vorjahr, Monat {sg(_ex["etw"][1],2)} %'), cols=3)}
