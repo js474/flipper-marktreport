@@ -271,11 +271,66 @@
     "2026-10",
     3.239
    ]
+  ],
+  "eur3": [
+   [
+    "2025-10",
+    2.034
+   ],
+   [
+    "2025-11",
+    2.042
+   ],
+   [
+    "2025-12",
+    2.048
+   ],
+   [
+    "2026-01",
+    2.028
+   ],
+   [
+    "2026-02",
+    2.011
+   ],
+   [
+    "2026-03",
+    2.109
+   ],
+   [
+    "2026-04",
+    2.175
+   ],
+   [
+    "2026-05",
+    2.226
+   ],
+   [
+    "2026-06",
+    2.339
+   ],
+   [
+    "2026-07",
+    2.425
+   ],
+   [
+    "2026-08",
+    2.513
+   ],
+   [
+    "2026-09",
+    2.635
+   ],
+   [
+    "2026-10",
+    2.635
+   ]
   ]
  },
  "reihen_id_j10": "BBIM1.M.DE.B.A2C.P.R.A.2250.EUR.N",
  "reihen_id_j5_10": "BBIM1.M.DE.B.A2C.O.R.A.2250.EUR.N",
  "reihen_id_j1_5": "BBIM1.M.DE.B.A2C.I.R.A.2250.EUR.N",
  "reihen_id_var": "BBIM1.M.DE.B.A2C.F.R.A.2250.EUR.N",
- "reihen_id_eur12": "BBIG1.M.D0.EUR.MMKT.EURIBOR.M12.AVE.MA"
+ "reihen_id_eur12": "BBIG1.M.D0.EUR.MMKT.EURIBOR.M12.AVE.MA",
+ "reihen_id_eur3": "BBIG1.M.D0.EUR.MMKT.EURIBOR.M03.AVE.MA"
 }
