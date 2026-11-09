@@ -61,6 +61,8 @@ jobs:
           print(f"::notice::{n} Seiten")
           sys.exit(0 if 14 <= n <= 30 else 1)
           PY
+      - name: Historie fortschreiben
+        run: python pipeline/data/historie.py
       - name: Komprimieren und ablegen
         run: |
           M=${{ steps.m.outputs.monat }}
@@ -70,7 +72,7 @@ jobs:
           d.save("ausgaben/Immobilienhandel-Marktreport-$M.pdf", garbage=4, deflate=True)
           PY
           git config user.name "marktreport-bot"; git config user.email "actions@users.noreply.github.com"
-          git rm -q --cached --ignore-unmatch ausgaben/.loeschen || true; git add -A ausgaben/ data/snapshots/$M/kpi.json; for f in bbk trends; do [ -f data/snapshots/$M/$f.json ] && git add data/snapshots/$M/$f.json; done; true
+          git rm -q --cached --ignore-unmatch ausgaben/.loeschen || true; git add -A ausgaben/ data/snapshots/$M/kpi.json; for f in bbk trends; do [ -f data/snapshots/$M/$f.json ] && git add data/snapshots/$M/$f.json; done; git add data/historie.json; true
           git commit -m "Ausgabe $M gebaut [skip ci]" || echo "keine Änderung"
           git pull --rebase -q origin main || true; git push || (git pull --rebase -q origin main && git push)
       - name: An Versand übergeben
