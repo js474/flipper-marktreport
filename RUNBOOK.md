@@ -8,6 +8,9 @@ Ausgeführt vom Monats-Agenten (geplante Aufgabe in der Claude-Cloud, am 12. jed
 - Agent: Daten holen, Snapshot schreiben, `pipeline/report/build.py` auf den neuen Monat anpassen (Labels, Datumsangaben, Schlüssel, Texte), lokal bauen und prüfen, pushen.
 - GitHub Workflow "Report bauen und ausliefern": baut bei jedem Push auf `data/snapshots/**` oder `pipeline/report/**` das PDF, prüft Quellen, Stil und Seitenzahl, legt es in `ausgaben/` ab und übergibt es an den Versand. Kein Agent-Schritt nötig.
 
+## Schritt 0: Meldungen lesen (Pflicht)
+Der Workflow „Feeds holen“ läuft am 11. automatisch und schreibt `data/snapshots/MONAT/feeds.json` (27 RSS-Feeds, gefiltert auf Immobilien, Zinsen, Bau, Haushalte, letzte 35 Tage). Fehlt die Datei: Workflow manuell starten (`gh api -X POST repos/js474/flipper-marktreport/actions/workflows/feeds-holen.yml/dispatches -f ref=main -f 'inputs[monat]=MONAT'`) und abwarten. Dann `feeds.json` vollständig lesen. Alles, was Zahlen im Report betrifft (neue Veröffentlichungen von Bundesbank, Destatis, GREIX, ifo, vdp, Europace, Interhyp, Argetra usw.), fließt in Schritt 1 ein; Meldungen mit Bezug zu Fix-und-Flip in die Kurzfassung oder Einordnungen (nur mit Quelle). Das Kapitel „Meldungen des Monats“ baut build.py automatisch aus feeds.json.
+
 ## Schritt 1: Snapshot anlegen
 `cp -r data/snapshots/VORMONAT data/snapshots/MONAT`, dann jeden Block mit dem neuesten veröffentlichten Wert aktualisieren. Regeln:
 - Nur Werte aus der Quelle selbst (Pressemitteilung, Tabelle, Datenbank). Nichts schätzen, nichts aus Erinnerung.
@@ -20,7 +23,12 @@ Quellen je Datei (erste Wahl, jeweils neueste Veröffentlichung):
 - `fin.json`: Bundesbank Geldmarktsätze (Euribor 1M/3M/6M/12M Tageswert und Monatsdurchschnitte, €STR; API `https://api.statistiken.bundesbank.de/rest/data/BBIG1/D.D0.EUR.MMKT.EURIBOR.M12.BID._Z?format=json&lastNObservations=5`, Monatsmittel `M.D0.EUR.MMKT.EURIBOR.M12.AVE.MA`; Werte prüfen, 1M/3M/6M/12M nicht verwechseln), MFI-Zinsstatistik Wohnungsbau nach Zinsbindung und Unternehmenskredite, Bank Lending Survey, Dr. Klein Trendindikator Baufinanzierung, KfW-Merkblätter 308 und 261, Grunderwerbsteuer je Land, Notarkosten (Verbraucherzentrale).
 - `zg.json`: Destatis Wohnkostenanteil, Mietbelastung, Einkommen (EU-SILC), Reallöhne, BA Arbeitsmarkt, Eigentumsquote, Wohnfläche, Baufertigstellungen, Haushalte, Heizungsart.
 - `demo.json`: Demografie, Erbschaften, DIW, Bevölkerungsprognose, Binnenwanderung, Mieten (GREIX-Miete, VPI Nettokalt), CO2-Preis, GEG, Zwangsversteigerungen, Steuerregeln.
-- Zusätzlich lesen (für Kurzfassung und Einordnung, nur mit Quelle zitieren): bulwiengesa (https://www.bulwiengesa.de/feed/), Bundesbank- und Destatis-Pressemitteilungen, ifo, vdp-Index.
+- `stimmung.json`: Bundesbank BOP-HH Immobilienpreiserwartungen (Seite „Immobilienpreiserwartungen“, monatlich ca. 13.), ifo Wohnungsbau (Klima, Stornierungen, Auftragsmangel; ifo.de blockt Abrufe, Werte über SHK-Journal/cash-online/Börsen-Zeitung), NIM Konsumklima (PDF Ende des Monats), Interhyp Zins-Update mit Bankenpanel (Mitte des Monats), EZB Consumer Expectations Survey (PM ca. 23.), Umfragen (Interhyp Wohntraum-/Leistbarkeitsstudie, Postbank/YouGov, DSGV Vermögensbarometer). Reihen (`reihe`) um den neuen Monat verlängern, 13 Monate behalten.
+- `markt.json`: ImmoScout24 WohnBarometer (quartalsweise, Nachfrage je Inserat nach Segment), immowelt Quartals-PM (Anteil Kaufanfragen), HAUSGOLD Anzeigendauer, Argetra Zwangsversteigerungen (Halbjahr Juli, Jahr Januar), Destatis Baugenehmigungen (Tabelle buw110, Reihe 12 Monate, PM ca. 17.), Europace EPX (ca. 8.), Hypoport Transaktionsvolumen (Quartal), vdp Index (Quartal, ca. 10. Feb/Mai/Aug/Nov).
+- `greix_staedte.json`: GREIX-Städtewerte aus `https://api.greixx.net/api-v1/cities/metrics/?prop_types=3&inflation=false&per_year=false&from_quarter=1&to_quarter=4&from_year=VORJAHR&to_year=JAHR&cities=...&data_index=false` (qm) und `data_index=true` (Index-yoy); nur über Browser lesbar (SPA), siehe Kommentar im JSON. `bund_q3` aus der GREIX-Pressemitteilung (Vermarktungsdauer, Anteil Preissenkungen, Transaktionen).
+- `zensus.json`: Anteil Gebäude bis 1979 je Stadt (Zensus 2022, Tabelle 3000G-1002, ändert sich nicht; nur bei neuen Städten ergänzen).
+- `eigentum.json`: Eigentumsquote (Mikrozensus, alle 4 Jahre), Eurostat, Bundesbank PHF (alle 2 bis 3 Jahre), EVS, Zensus Baujahr Bund, Reallohn (Quartal, PM Ende Feb/Mai/Aug/Nov) plus Häuserpreisindex (Quartal, Tabelle Destatis), Insolvenzen (Destatis monatlich ca. 9., Creditreform Halbjahr/Jahr). `reallohn.reihe` um das neue Quartal ergänzen, 10 Quartale behalten; `insolvenzen.monate_*` fortschreiben.
+- Automatisch im Workflow (nicht anfassen): `bbk.json` (Bundesbank-API: Bauzinsen, Euribor 12M/3M), `trends.json` (Google Trends), `feeds.json` (RSS).
 
 ## Schritt 2: Leverage-Angebotsdaten (Leverage-MCP)
 Tools: `deals_search_count`, `deals_search` (bei deals_search immer `limit: 1`). Nur Werte aus Tool-Outputs. Eine Region je Subagent.
@@ -38,6 +46,8 @@ Median-Methode: `deals_search_count` → n. Dann `deals_search` mit gleichen Fil
 
 Kriterien: SAN = `{"check_type":"condition_allowlist","params":{"values":["renovation_needed"]}}`, ALT = `[{"check_type":"building_year_min","threshold":1950},{"check_type":"building_year_max","threshold":1994}]`, REND = `{"check_type":"rental_yield_gross_market_min","threshold":0.0001}`.
 
+Zusätzlich je Stadt zwei Zählungen (`deals_search_count`, gleiche festen Parameter): `unter_basis` = criteria `[{"check_type":"rental_yield_gross_market_min","threshold":0.0001}]`, `unter_n` = criteria `[{"check_type":"purchase_price_vs_market_max_pct","threshold":0}]` (Angebote auf oder unter Marktwert). Bei capped: -1.
+
 Je Stadt (Schlüssel im JSON):
 1. `n`, `qm`: alle Inserate, Median `sale_price_per_sqm`.
 2. `san_n`, `san`: [SAN].
@@ -50,6 +60,7 @@ Je Stadt (Schlüssel im JSON):
 €/m² ganzzahlig.
 
 ## Schritt 3: build.py anpassen
+- Kapitelnummern und Inhaltsverzeichnis vergibt build.py automatisch (Überschriften mit `§ ·`). Kapitel ohne Datei (z. B. fehlende stimmung.json) entfallen automatisch.
 - Referenzzins für variable Flipper-Darlehen ist der **12-Monats-Euribor** (nicht 3M). KPI „Flipper-Zins“ = 12M-Euribor + `flipper_aufschlag` (2,0 und 2,5 Prozentpunkte, beide zeigen). 3M/6M nur als Kontext. Die 12M-Monatsreihe kommt aus `bbk.json` (`eur12`, holt `pipeline/data/bundesbank.py` im Workflow).
 - Alle Datums- und Monatsangaben (Titelseite "Ausgabe NN · Stand", Header, KPI-Untertitel, Quellen-Zitate mit Stand, Abrufdatum Leverage) auf den neuen Stand. Ausgabenummer hochzählen.
 - Abschnitt „Neu in Recht und Steuern“: Nur wenn es seit dem Vormonat neue Urteile (BFH, BGH), BMF-Schreiben oder Gesetze mit Bezug zu Immobilienhandel, Grunderwerbsteuer, gewerblichem Grundstückshandel oder Förderung gibt. Dann als `recht_neu` (Liste mit titel, datum, kern, url) in `demo.json` und als eigenes Kapitel vor Methodik einbauen. Sonst entfällt das Kapitel.

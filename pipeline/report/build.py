@@ -157,20 +157,21 @@ def bars(items, unit=' %', dec=1, lab=230, w=640, rowh=26, signed=True, vmin=Non
     return svg(w, h, ''.join(o))
 
 def grouped(cats, a, b, la, lb, unit=' %', w=640, h=200, dec=2):
-    lo, hi = 0, max(a + b) * 1.18
+    lo, hi = min(0, min(a + b) * 1.25), max(0, max(a + b)) * 1.18
     l, bt, top = 40, 40, 30
     cw = (w - l - 10) / len(cats)
     Y = lambda v: top + (hi - v) / (hi - lo) * (h - bt - top)
     o = []
-    for g in range(0, int(hi) + 1):
-        o.append(f'<line x1="{l}" x2="{w-10}" y1="{Y(g)}" y2="{Y(g)}" stroke="{LINE}"/><text x="{l-8}" y="{Y(g)+4}" font-size="10" text-anchor="end" fill="{MUT}">{g}</text>')
+    for g in range(int(math.floor(lo)), int(hi) + 1):
+        o.append(f'<line x1="{l}" x2="{w-10}" y1="{Y(g)}" y2="{Y(g)}" stroke="{LINE}"/><text x="{l-8}" y="{Y(g)+4}" font-size="10" text-anchor="end" fill="{MUT}">{de(g)}</text>')
     bw = cw * 0.28
     for i, c in enumerate(cats):
         cx = l + cw * i + cw / 2
         for j, (v, col) in enumerate([(a[i], '#9cc9cc'), (b[i], TD)]):
             x = cx - bw - 3 + j * (bw + 6)
-            o.append(f'<rect x="{x}" y="{Y(v)}" width="{bw}" height="{Y(0)-Y(v)}" rx="3" fill="{col}"/>')
-            o.append(f'<text x="{x+bw/2}" y="{Y(v)-6}" font-size="10" font-weight="700" text-anchor="middle" fill="{INK}">{de(v,dec)}</text>')
+            y0, y1 = sorted([Y(0), Y(v)])
+            o.append(f'<rect x="{x}" y="{y0}" width="{bw}" height="{max(y1-y0,1)}" rx="3" fill="{col}"/>')
+            o.append(f'<text x="{x+bw/2}" y="{(Y(v)-6) if v >= 0 else (Y(v)+12)}" font-size="10" font-weight="700" text-anchor="middle" fill="{INK}">{de(v,dec)}</text>')
         o.append(f'<text x="{cx}" y="{h-bt+18}" font-size="10.5" text-anchor="middle" fill="{INK}">{c}</text>')
     o.append(f'<rect x="{l}" y="4" width="12" height="12" rx="2" fill="#9cc9cc"/><text x="{l+18}" y="14" font-size="10.5" fill="{MUT}">{la}</text>')
     o.append(f'<rect x="{l+150}" y="4" width="12" height="12" rx="2" fill="{TD}"/><text x="{l+168}" y="14" font-size="10.5" fill="{MUT}">{lb}</text>')
@@ -350,7 +351,7 @@ cover = f'''<section class="cover-page">
 <div class="cover"><img class="clogo" src="data:image/png;base64,{LOGO_W}"/>
 <div class="kicker">Ausgabe {AUSGABE_NR:02d} · Erscheint am {ERSCHEINT} · Datenstand {STAND}</div>
 <h1>Immobilienhandel-Marktreport</h1><div class="sub">Fix-und-Flip · Berichtsmonat {BERICHT}</div>
-<p class="lead">Zinsen, Finanzierung, Preise, Angebotsdaten aus {len(rows)} Städten, Baukosten, Zielgruppe und Demografie. Zusammengeführt aus {de(n_total)} aktiven Wohnungsinseraten der Leverage-Datenbank und über 30 amtlichen und institutionellen Quellen.</p></div>
+<p class="lead">Zinsen, Finanzierung, Preise, Angebotsdaten aus {len(rows)} Städten, Baukosten, Zielgruppe und Demografie. Zusammengeführt aus {de(n_total)} aktiven Wohnungsinseraten der Leverage-Datenbank und über 60 amtlichen, institutionellen und Markt-Quellen.</p></div>
 <h2 class="first">Die Lage in sechs Zahlen</h2>
 {kpis(
  kpi(de(bz,2)+' %', 'Bauzins über 10 Jahre', f'Sep 2026, Vorjahr {de(bz_vj,2)} %'),

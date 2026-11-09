@@ -43,8 +43,11 @@ FEEDS = [   # alle am 09.11.2026 geprüft (XML mit Einträgen aus 2026)
 WORTE = re.compile(r'immobil|wohnung|wohnungsbau|baugenehm|baupreis|bauzins|baufinanz|hypothek|zins|euribor|leitzins|einlagesatz|'
                    r'miete|mietpreis|kaufpreis|hauspreis|häuserpreis|eigentum|eigenheim|grunderwerb|grundsteuer|zwangsversteig|'
                    r'insolvenz|baukosten|sanier|energieausweis|gebäudeenergie|wärmepumpe|konsumklima|geschäftsklima|'
-                   r'kredit|darlehen|inflation|verbraucherpreis|reallohn|einkommen|haushalt|bevölkerung|zuwander|wanderung|'
+                   r'kredit|darlehen|inflation|verbraucherpreis|reallohn|einkommen|haushalte|privathaushalt|bevölkerung|zuwander|wanderung|'
                    r'erbschaft|vermögen|kfw|förder', re.I)
+
+AUSSCHLUSS = re.compile(r'tender|bubill|schatzanweisung|bundesanleihe|aufstockung|podcast|webinar|veranstaltung|stellenangebot|smart city|'
+                        r'jobs?\b|karriere|gewinnspiel|newsletter|sommerfest|jubiläum|plastiksteuer|fußball', re.I)
 
 def text(el, *names):
     for n in names:
@@ -111,6 +114,7 @@ def hole(name, url):
             out.append({'quelle': name, 'titel': t, 'link': l, 'datum': d.date().isoformat() if d else None, 'teaser': z})
     return out
 
+_titel_gesehen = set()
 grenze = (datetime.now(timezone.utc) - timedelta(days=TAGE)).date().isoformat()
 ergebnis = {'stand': datetime.now(timezone.utc).date().isoformat(), 'zeitraum_ab': grenze, 'feeds_ok': [], 'feeds_fehler': {}, 'meldungen': []}
 for name, url in FEEDS:
@@ -123,8 +127,10 @@ for name, url in FEEDS:
     for e in eintraege:
         if e['datum'] and e['datum'] < grenze:
             continue
-        if WORTE.search(e['titel'] + ' ' + e['teaser']):
-            ergebnis['meldungen'].append(e)
+        if AUSSCHLUSS.search(e['titel']):
+            continue
+        if WORTE.search(e['titel'] + ' ' + e['teaser']) and e['titel'] not in _titel_gesehen:
+            _titel_gesehen.add(e['titel']); ergebnis['meldungen'].append(e)
 
 ergebnis['meldungen'].sort(key=lambda x: x['datum'] or '', reverse=True)
 d = R / 'data' / 'snapshots' / MONTH

@@ -6,14 +6,18 @@ Wer Wohnungen kauft, saniert und verkauft, trifft jede Entscheidung auf Basis vo
 
 
 ## Was drinsteht
-Der Report erscheint am 15. für den Vormonat. Sechs Kapitel:
+Der Report erscheint am 15. für den Vormonat, rund 30 Seiten:
 
 - Zinsen und Finanzierung: 12-Monats-Euribor als Referenz für variable Flipper-Darlehen, daraus der Flipper-Zins bei 2,0 und 2,5 Prozentpunkten Aufschlag, Bauzins mit 10 Jahren Bindung für deinen Käufer, Kreditvergabe der Banken
 - Zwei Seiten der Finanzierung: Rechenbeispiel Projektfinanzierung (Flipper) und Eigennutzer-Finanzierung (Käufer), Grunderwerbsteuer je Bundesland, KfW-Programme
-- Preise und Mieten: GREIX, Europace, Destatis, mit Vorjahresvergleich
-- Angebotsdaten aus 48 Städten (Leverage-Datenbank): Median-Preis je m², Abschlag unsanierter Wohnungen gegenüber dem Bestand gleicher Baujahre, Bruttorendite, Angebotspreis gegenüber Marktwert, Veränderung zum Vormonat
-- Baukosten, Energie, Regulierung: Baupreisindex, Instandhaltungspreise, CO₂-Preis, GEG
-- Zielgruppe und Demografie: Einkommen, Wohnkostenanteil, Eigentumsquote, Haushalte, Erbschaften, Bevölkerungsprognose
+- Preise und Mieten: GREIX, Europace, vdp, Destatis, mit Vorjahresvergleich
+- Stimmung und Erwartung: Was Haushalte für die Preise erwarten (Bundesbank-Umfrage), ifo-Klima im Wohnungsbau, Stornierungen, Konsumklima, Zinserwartung der Banken, Wunsch nach Eigentum
+- Angebotsdaten aus 48 Städten (Leverage-Datenbank): Median-Preis je m², Abschlag unsanierter Wohnungen gegenüber dem Bestand gleicher Baujahre, Bruttorendite, Anteil der Angebote unter Marktwert, Angebotspreis gegenüber GREIX-Transaktionspreis, Bruttorendite minus Euribor, Anteil der Gebäude bis Baujahr 1979 je Stadt, Veränderung zum Vormonat
+- Marktdruck: Kaufnachfrage je Inserat nach Preissegment, Vermarktungsdauer, Anteil der Verkäufe mit Preissenkung, Baugenehmigungen Monat für Monat, Zwangsversteigerungen, Suchinteresse bei Google
+- Leistbarkeit: Wie viele m² ein Haushalt mit Medianeinkommen in deiner Stadt finanzieren kann, Reallöhne gegen Preise
+- Baukosten, Energie, Regulierung: Baupreisindex, Instandhaltungspreise, Insolvenzen im Bau, CO₂-Preis, GEG
+- Zielgruppe und Demografie: Einkommen, Wohnkostenanteil, Eigentumsquote im Zeitverlauf, Vermögen von Eigentümern und Mietern, Haushalte, Erbschaften, Bevölkerungsprognose
+- Meldungen des Monats: Die wichtigsten Mitteilungen aus 27 Feeds von Bundesbank, Destatis, EZB, ifo, Verbänden und Portalen, mit Link
 
 Dazu ein Quellenverzeichnis mit Link zu jeder Zahl.
 
@@ -31,7 +35,7 @@ Dazu ein Quellenverzeichnis mit Link zu jeder Zahl.
 
 
 ## Woher die Zahlen kommen
-Jede Ausgabe führt über 30 Quellen zusammen. Die wichtigsten:
+Jede Ausgabe führt über 60 Quellen zusammen. Die wichtigsten:
 
 - Deutsche Bundesbank: MFI-Zinsstatistik (Bauzinsen nach Zinsbindung, Unternehmenskredite), Geldmarktsätze (Euribor 1 bis 12 Monate, €STR), Bank Lending Survey, Renditen Bundesanleihen, Zeitreihen direkt aus der Bundesbank-API
 - Europäische Zentralbank: Leitzinsbeschlüsse
@@ -46,6 +50,10 @@ Jede Ausgabe führt über 30 Quellen zusammen. Die wichtigsten:
 - Dr. Klein: Trendindikator Baufinanzierung
 - Umweltbundesamt und BMWK: CO₂-Preis, GEG
 - Leverage-Datenbank: rund 220.000 aktive Wohnungsinserate aus acht Portalen und Direktquellen, ausgewertet je Stadt nach Preis, Zustand, Baujahr, Rendite und Marktwert
+- Umfragen und Stimmung: Bundesbank-Haushaltsbefragung (BOP-HH), ifo Konjunkturumfragen, NIM Konsumklima, EZB Consumer Expectations Survey, Interhyp Bankenpanel und Studien, Postbank/YouGov, DSGV Vermögensbarometer
+- Markt und Nachfrage: ImmoScout24 WohnBarometer, immowelt, HAUSGOLD, Argetra (Zwangsversteigerungen), Hypoport, vdp, Creditreform, Google Trends
+- Bestand: Zensus 2022 (Baujahr der Gebäude je Stadt, Leerstand), Bundesbank-Vermögensbefragung PHF, Einkommens- und Verbrauchsstichprobe
+- 27 Nachrichten-Feeds, die vor jeder Ausgabe automatisch gelesen und auf Immobilien, Zinsen und Bau gefiltert werden
 
 Nichts davon ist geschätzt. Fehlt eine neue Veröffentlichung, bleibt der alte Wert mit altem Stand stehen.
 
