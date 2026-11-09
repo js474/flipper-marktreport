@@ -1,0 +1,50 @@
+{
+ "is24": {
+  "nachfrage_kauf_de_pct": -7, "nachfrage_metropolen_pct": -9, "nachfrage_umland_pct": -8, "nachfrage_kreisfrei_pct": -6, "nachfrage_land_pct": -2, "nachfrage_miete_pct": 12,
+  "nachfrage_segment": {"unter 3.000 €/m²": -12, "3.000 bis 5.500": -8, "5.500 bis 7.000": -6, "7.000 bis 8.500": -6, "über 8.500": -2},
+  "zeitraum_nachfrage": "Mai bis September 2026 gegenüber der Vorperiode",
+  "bestand_etw": {"qm": 2653, "qoq": 0.3, "yoy": 4.1}, "bestand_haus": {"qm": 2955, "qoq": 0.5, "yoy": 3.6},
+  "neubau_etw": {"qm": 4196, "qoq": 0.7, "yoy": 2.5},
+  "metropolen_etw": {"Berlin": [4879, -1.5, 2.2], "Düsseldorf": [4611, 1.0, 2.7], "Frankfurt": [5385, -1.0, 1.8], "Hamburg": [5319, -1.5, 2.3], "Köln": [4471, 0.3, 4.5], "Leipzig": [3074, 0.7, 5.0], "München": [8309, -0.4, 1.3], "Stuttgart": [4750, -0.4, 0.0]},
+  "quelle": "ImmoScout24 WohnBarometer Q3 2026, veröffentlicht 02.10.2026 (Angebotspreise Bestandswohnungen; Nachfrage = Kontaktanfragen je Inserat, nur als Veränderung ausgewiesen)",
+  "url": "https://www.immobilienscout24.de/unternehmen/news-medien/news/default-title/kaufmarkt-bleibt-preisstabil-hoehere-zinsen-daempfen-nachfrage/"
+ },
+ "immowelt": {
+  "etw_qm": 3288, "etw_qoq": 0.7, "etw_qoq_vorquartal": 1.0, "efh_qm": 2886, "efh_qoq": 0.7,
+  "kaufanfragen_anteil": 18.3, "kaufanfragen_anteil_vj": 19.4,
+  "staedte_qoq": {"Düsseldorf": 3.7, "Essen": 3.5, "Hamburg": 1.2, "Frankfurt": 1.2, "München": 0.8, "Berlin": 0.2, "Nürnberg": -0.3, "Hannover": -0.8, "Dortmund": -1.0, "Duisburg": -1.9},
+  "quelle": "immowelt Pressemitteilung zum 3. Quartal 2026, veröffentlicht 30.09.2026 (Angebotspreise; Anteil Kaufanfragen an allen Anfragen Januar bis August)",
+  "url": "https://www.immowelt.de/ueberuns/presse/pressemitteilungenkontakt/immoweltde/2026/immobilienmarkt-verliert-im-3-quartal-an-schwung-kaufpreise-steigen-langsamer-nachfrage-verschiebt-sich-zur-miete/"
+ },
+ "hausgold": {"text": "Anzeigendauer 1. Quartal 2026 gegenüber 1. Quartal 2025: Hamburg rund +44 %, Bayern rund +40 %, Sachsen-Anhalt rund +45 %", "quelle": "HAUSGOLD, Auswertung Anzeigendauer Q1 2025 bis Q1 2026", "url": "https://ctf-assets.hausgold.de/5qea3umoe8gl/4tjd9yaQfJUhXotpl4elsE/6c491ca9c816b7dab8b89e9ca4ecdcf1/Anzeigendauer_2025-2026-2.pdf"},
+ "zwangsversteigerungen": {
+  "h1": [["1. Hj. 2024", 6909, 2.17], ["1. Hj. 2025", 7240, 2.23], ["1. Hj. 2026", 7845, 2.59]],
+  "jahre": [["2023", 12332, 3.9], ["2024", 13445, 4.30], ["2025", 14082, 4.76]],
+  "h1_2026_yoy": 8.4, "h1_2026_vw_yoy": 16.5, "h1_2026_vw_mittel": 330852, "prognose_2026": 15000,
+  "objekte_2025": {"Ein- und Zweifamilienhäuser": 49.9, "Eigentumswohnungen": 19.9, "Gewerbe und Mehrfamilienhäuser": 14.9, "Grundstücke": 13.7, "Garagen, Sonstiges": 1.6},
+  "quelle": "Argetra GmbH, Halbjahresbericht 1/2026 (Juli 2026, wiedergegeben bei Haufe und Börse Express) und Jahresbericht 2025 (Januar 2026)",
+  "url": "https://www.haufe.de/immobilien/entwicklung-vermarktung/marktanalysen/zahl-der-zwangsversteigerungen-weiter-gesunken_84324_393634.html",
+  "url2": "https://m-m.argetra.de/asset/21:argetrajahresbericht01-2025pressepdf"
+ },
+ "baugenehmigungen": {
+  "reihe": [["2025-09", 24383, 59.8], ["2025-10", 19859, 6.8], ["2025-11", 20119, 12.5], ["2025-12", 22934, 3.1], ["2026-01", 19510, 8.4], ["2026-02", 22220, 24.1], ["2026-03", 21775, 11.5], ["2026-04", 20172, 9.2], ["2026-05", 20992, 24.7], ["2026-06", 21642, 13.8], ["2026-07", 22492, 1.9], ["2026-08", 20642, 6.8]],
+  "jan_aug_2026": 169400, "jan_aug_yoy": 12.1, "aug_neubau": 16500, "aug_neubau_yoy": 4.2,
+  "quelle": "Destatis, Baugenehmigungen, Konjunkturindikator buw110 (Originalwerte, Stand 16.10.2026) und Pressemitteilung Nr. 370 vom 16.10.2026",
+  "url": "https://www.destatis.de/DE/Themen/Wirtschaft/Konjunkturindikatoren/Baugenehmigungen/buw110.html",
+  "url2": "https://www.destatis.de/DE/Presse/Pressemitteilungen/2026/10/PD26_370_3111.html"
+ },
+ "epx": {
+  "gesamt": [221.77, -0.35, 0.84], "etw": [218.39, -0.66, -0.53], "bestand_haus": [201.12, -0.69, -0.12], "neubau_haus": [245.80, 0.22, 2.92],
+  "monat": "September 2026",
+  "quelle": "Europace Hauspreisindex EPX September 2026, veröffentlicht 08.10.2026 (Oktober erscheint Mitte November)",
+  "url": "https://europace.de/epx-9-26-bestandspreise-fallen-neubau-teurer-denn-je/",
+  "transaktion": {"q3_2026": 19.04, "q3_2025": 18.78, "m9_2026": 57.34, "m9_2025": 57.13, "quelle": "Hypoport SE, Operative Kennziffern Q3 2026, 15.10.2026 (Europace Immobilienfinanzierung, Mrd. €, vor Storno)", "url": "https://www.hypoport.de/wp-content/uploads/2026/10/20261015-PM-Hypoport-Operative-Kennziffern-Q3-2026.pdf"}
+ },
+ "vdp": {
+  "wohnen_yoy": 1.9, "wohnen_qoq": 0.3, "etw_yoy": 2.6, "ezfh_yoy": 2.0, "mfh_yoy": 1.6, "mieten_mfh_yoy": 3.2, "top7_yoy": 2.1,
+  "top7": {"Hamburg": 3.8, "Köln": 2.5, "Frankfurt": 2.4, "Düsseldorf": 2.4, "München": 2.3, "Berlin": 1.6, "Stuttgart": 0.7},
+  "quartal": "Q2 2026",
+  "quelle": "vdp Verband deutscher Pfandbriefbanken, Immobilienpreisindex Q2 2026, Pressemitteilung vom 10.08.2026 (Q3 erscheint Mitte November)",
+  "url": "https://www.pfandbrief.de/en/property-prices-see-uneven-development/"
+ }
+}

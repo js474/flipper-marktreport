@@ -1,0 +1,348 @@
+{
+ "bop_hh": {
+  "preiserwartung_12m_mittel": {
+   "wert": 4.9,
+   "einheit": "% Mittelwert erwartete Veränderung regionaler Immobilienpreise in 12 Monaten",
+   "zeitraum": "2026-09",
+   "vormonat": 4.7,
+   "reihe": [
+    [
+     "2026-07",
+     5.7
+    ],
+    [
+     "2026-08",
+     4.7
+    ],
+    [
+     "2026-09",
+     4.9
+    ]
+   ]
+  },
+  "anteil_steigend": {
+   "wert": 55,
+   "vormonat": 58,
+   "reihe": [
+    [
+     "2026-07",
+     61
+    ],
+    [
+     "2026-08",
+     58
+    ],
+    [
+     "2026-09",
+     55
+    ]
+   ]
+  },
+  "anteil_fallend": {
+   "wert": 9,
+   "vormonat": 10,
+   "reihe": [
+    [
+     "2026-07",
+     7
+    ],
+    [
+     "2026-08",
+     10
+    ],
+    [
+     "2026-09",
+     9
+    ]
+   ]
+  },
+  "quelle": "Deutsche Bundesbank, Studie zu Erwartungen von Privatpersonen (BOP-HH), Immobilienpreiserwartungen, veröffentlicht 13.10.2026",
+  "url": "https://www.bundesbank.de/en/bundesbank/research/survey-on-consumer-expectations-bop-hh/real-estate-price-expectations-848340"
+ },
+ "ifo": {
+  "klima": {
+   "wert": -25.1,
+   "vormonat": -22.5,
+   "vorjahr": -22.0,
+   "zeitraum": "2026-09",
+   "reihe": [
+    [
+     "2025-09",
+     -22.0
+    ],
+    [
+     "2025-10",
+     -23.0
+    ],
+    [
+     "2025-11",
+     -19.3
+    ],
+    [
+     "2025-12",
+     -20.6
+    ],
+    [
+     "2026-01",
+     -20.9
+    ],
+    [
+     "2026-02",
+     -17.7
+    ],
+    [
+     "2026-03",
+     -19.5
+    ],
+    [
+     "2026-04",
+     -28.2
+    ],
+    [
+     "2026-05",
+     -29.5
+    ],
+    [
+     "2026-06",
+     -31.0
+    ],
+    [
+     "2026-07",
+     -29.0
+    ],
+    [
+     "2026-08",
+     -22.5
+    ],
+    [
+     "2026-09",
+     -25.1
+    ]
+   ]
+  },
+  "storno": {
+   "wert": 14.1,
+   "vormonat": 13.4,
+   "vorjahr": 8.4,
+   "zeitraum": "2026-09"
+  },
+  "auftragsmangel": {
+   "wert": 41.3,
+   "vormonat": 41.3,
+   "vorjahr": 46.7,
+   "zeitraum": "2026-09"
+  },
+  "quelle": "ifo Institut, Konjunkturumfrage Wohnungsbau September 2026 (Meldung vom 16.10.2026), wiedergegeben im SHK-Journal; Reihe aus Architekturblatt, cash-online, Börsen-Zeitung, DHZ",
+  "url": "https://www.shk-journal.de/news/ifo-stimmung-im-wohnungsbau-weniger-zuversichtlich.html",
+  "hinweis": "Oktoberwert erscheint Mitte November."
+ },
+ "konsumklima": {
+  "prognose": {
+   "wert": -30.8,
+   "vormonat": -30.6,
+   "vorjahr": -22.5,
+   "zeitraum": "2026-11",
+   "reihe": [
+    [
+     "2025-11",
+     -24.1
+    ],
+    [
+     "2025-12",
+     -23.4
+    ],
+    [
+     "2026-01",
+     -26.9
+    ],
+    [
+     "2026-02",
+     -24.2
+    ],
+    [
+     "2026-03",
+     -24.8
+    ],
+    [
+     "2026-04",
+     -28.1
+    ],
+    [
+     "2026-05",
+     -33.1
+    ],
+    [
+     "2026-06",
+     -29.7
+    ],
+    [
+     "2026-07",
+     -29.3
+    ],
+    [
+     "2026-08",
+     -29.4
+    ],
+    [
+     "2026-09",
+     -26.8
+    ],
+    [
+     "2026-10",
+     -30.6
+    ],
+    [
+     "2026-11",
+     -30.8
+    ]
+   ]
+  },
+  "anschaffung": {
+   "wert": -11.9,
+   "vormonat": -10.8,
+   "vorjahr": -9.3,
+   "zeitraum": "2026-10",
+   "reihe": [
+    [
+     "2025-10",
+     -9.3
+    ],
+    [
+     "2025-11",
+     -6.0
+    ],
+    [
+     "2025-12",
+     -7.5
+    ],
+    [
+     "2026-01",
+     -4.0
+    ],
+    [
+     "2026-02",
+     -9.3
+    ],
+    [
+     "2026-03",
+     -10.9
+    ],
+    [
+     "2026-04",
+     -14.4
+    ],
+    [
+     "2026-05",
+     -13.2
+    ],
+    [
+     "2026-06",
+     -13.4
+    ],
+    [
+     "2026-07",
+     -9.9
+    ],
+    [
+     "2026-08",
+     -9.8
+    ],
+    [
+     "2026-09",
+     -10.8
+    ],
+    [
+     "2026-10",
+     -11.9
+    ]
+   ]
+  },
+  "einkommen": {
+   "wert": -15.7,
+   "vormonat": -15.0,
+   "vorjahr": 2.3,
+   "zeitraum": "2026-10"
+  },
+  "konjunktur": {
+   "wert": 2.1,
+   "vormonat": -3.4,
+   "vorjahr": 0.8,
+   "zeitraum": "2026-10"
+  },
+  "sparneigung": {
+   "wert": 17.2,
+   "vormonat": 21.5,
+   "zeitraum": "2026-10"
+  },
+  "quelle": "NIM Konsumklima powered by GfK, Pressemitteilung vom 28.10.2026 (Befragung 1. bis 12. Oktober 2026, rund 2.000 Interviews)",
+  "url": "https://www.nim.org/fileadmin/PUBLIC/3_1_Konsumklima/2026/2026_10/2026_10_PM_NIM_Konsumklima_powered_by_GfK_dt_fin.pdf"
+ },
+ "zinserwartung": {
+  "kurz": {
+   "steigend": 0,
+   "gleich": 80,
+   "fallend": 20
+  },
+  "lang": {
+   "steigend": 40,
+   "fallend": 60
+  },
+  "lang_vorjahr": {
+   "steigend": 60,
+   "gleich": 20,
+   "fallend": 20
+  },
+  "bauzins10": 4.4,
+  "quelle": "Interhyp Zins-Update Oktober 2026 (Bankenpanel), veröffentlicht 15.10.2026; Vorjahr: Interhyp Bankenpanel November 2025 (cash-online, 06.11.2025)",
+  "url": "https://www.interhyp.de/ueber-interhyp/presse/zinsupdate-oktober-2026/"
+ },
+ "ezb_ces": {
+  "hauspreis_12m": {
+   "wert": 3.5,
+   "vormonat": 3.4,
+   "vorjahr": 3.5,
+   "zeitraum": "2026-09",
+   "einheit": "% winsorisierter Mittelwert, Euroraum"
+  },
+  "kreditzugang": "Nettoanteil mit erschwertem Kreditzugang gegenüber August gestiegen (kein Zahlenwert in der Mitteilung)",
+  "quelle": "Europäische Zentralbank, Consumer Expectations Survey September 2026, Pressemitteilung vom 23.10.2026",
+  "url": "https://ecb.europa.eu/press/pr/date/2026/html/ecb.pr261023~a3d201c97c.en.html"
+ },
+ "umfragen": {
+  "interhyp_mieter_wunsch": {
+   "wert": 68,
+   "einheit": "% der Mieterinnen und Mieter wünschen sich Wohneigentum",
+   "zusatz": "80 % der 23- bis 30-Jährigen; 97 % der Eigentümer zufrieden mit Kauf",
+   "zeitraum": "Befragung 18.08. bis 01.09.2026, n = 1.523",
+   "quelle": "Interhyp Wohntraumstudie 2026, veröffentlicht 21.10.2026",
+   "url": "https://www.interhyp.de/ueber-interhyp/presse/interhyp-wohntraumstudie-oktober-2026/"
+  },
+  "postbank_mieter_wunsch": {
+   "wert": 47.9,
+   "einheit": "% der Mieter würden lieber im Eigentum wohnen",
+   "zusatz": "45,8 % sehen Eigentum am ehesten über Erbschaft erreichbar",
+   "zeitraum": "Juli 2026, YouGov, n = 1.109",
+   "quelle": "Postbank/YouGov-Umfrage, wiedergegeben bei fundresearch.de (dpa), 27.07.2026",
+   "url": "https://www.fundresearch.de/nachrichten/wohnen/2026/07/miete-fuer-viele-schwer-bezahlbar-was-haelt-vom-kauf-ab-540565.php"
+  },
+  "interhyp_leistbarkeit": {
+   "wert": 46,
+   "vorjahr": 39,
+   "einheit": "% sehen Immobilien in der Wunschregion als kaum leistbar",
+   "zusatz": "39 % halten den Markt für überdreht (2025: 35 %)",
+   "zeitraum": "April 2026, n = 1.019",
+   "quelle": "Interhyp Leistbarkeitsstudie 2026, veröffentlicht 10.06.2026",
+   "url": "https://www.interhyp.de/ueber-interhyp/presse/interhyp-leistbarkeitsstudie-2026/"
+  },
+  "dsgv": {
+   "aktien": 28,
+   "sparen_wichtig": 75,
+   "anlageplan": 35,
+   "zeitraum": "2026, über 4.800 Befragte",
+   "quelle": "DSGV Vermögensbarometer 2026, wiedergegeben bei fundresearch.de (dpa), 27.10.2026",
+   "url": "https://www.fundresearch.de/nachrichten/finanzen/2026/10/nur-die-schweizer-sparen-mehr-als-die-deutschen-550152.php"
+  },
+  "quelle": "Interhyp Wohntraumstudie 2026, Interhyp Leistbarkeitsstudie 2026, Postbank/YouGov Juli 2026, DSGV Vermögensbarometer 2026 (Einzelquellen je Eintrag)",
+  "url": "https://www.interhyp.de/ueber-interhyp/presse/interhyp-wohntraumstudie-oktober-2026/"
+ }
+}

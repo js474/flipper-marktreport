@@ -1,3 +1,4 @@
+import re
 import json, base64, math, pathlib, os
 from playwright.sync_api import sync_playwright
 
@@ -175,16 +176,25 @@ def grouped(cats, a, b, la, lb, unit=' %', w=640, h=200, dec=2):
     o.append(f'<rect x="{l+150}" y="4" width="12" height="12" rx="2" fill="{TD}"/><text x="{l+168}" y="14" font-size="10.5" fill="{MUT}">{lb}</text>')
     return svg(w, h, ''.join(o))
 
-def line_chart(pts, lo, hi, w=640, h=180, dec=2, unit=' %'):
-    l, b, top = 46, 30, 26
-    step = (w - l - 30) / (len(pts) - 1)
+def nice_step(span, n=5):
+    raw = span / n; mag = 10 ** math.floor(math.log10(raw)) if raw > 0 else 1
+    for m in (1, 2, 2.5, 5, 10):
+        if raw <= m * mag: return m * mag
+    return 10 * mag
+def auto_range(vals, pad=0.12):
+    lo, hi = min(vals), max(vals); span = (hi - lo) or abs(hi) or 1
+    st = nice_step(span)
+    lo = math.floor((lo - span * pad) / st) * st; hi = math.ceil((hi + span * pad) / st) * st
+    return lo, hi, st
+def line_chart(pts, lo, hi, w=640, h=180, dec=2, unit=' %', step=0.2, lab=None):
+    l, b, top = (lab or 46), 30, 26
     X = lambda i: l + 34 + i * (w - l - 70) / (len(pts) - 1)
     Y = lambda v: top + (hi - v) / (hi - lo) * (h - b - top)
     o = []
     g = lo
     while g <= hi + 1e-9:
-        o.append(f'<line x1="{l}" x2="{w-10}" y1="{Y(g)}" y2="{Y(g)}" stroke="{LINE}"/><text x="{l-8}" y="{Y(g)+4}" font-size="10" text-anchor="end" fill="{MUT}">{de(g,1)}</text>')
-        g += 0.2
+        o.append(f'<line x1="{l}" x2="{w-10}" y1="{Y(g)}" y2="{Y(g)}" stroke="{LINE}"/><text x="{l-8}" y="{Y(g)+4}" font-size="10" text-anchor="end" fill="{MUT}">{de(g, 1 if step < 1 else 0)}</text>')
+        g += step
     o.append('<path d="' + ' '.join(f"{'M' if i == 0 else 'L'}{X(i)},{Y(v)}" for i, (_, v) in enumerate(pts)) + f'" fill="none" stroke="{TD}" stroke-width="2.5"/>')
     for i, (k, v) in enumerate(pts):
         o.append(f'<circle cx="{X(i)}" cy="{Y(v)}" r="4.5" fill="{TD}"/>')
@@ -280,7 +290,7 @@ LOGO_W = base64.b64encode((R/'assets/logo_white.png').read_bytes()).decode()
 def kpi(v, l, s=''):
     return f'<div class="kpi"><div class="v">{v}</div><div class="l">{l}</div><div class="s">{s}</div></div>'
 def kpis(*k, cols=None):
-    return f'<div class="kpis c{cols or len(k)}">{"".join(k)}</div>'
+    return f'<div class="kpis c{cols or len(k)}">{"".join(k)}</div><!--/kpis-->'
 def note(t, title='Einordnung für Flipper'):
     return f'<div class="note avoid"><b>{title}:</b> {t}</div>'
 def src(t):
@@ -299,6 +309,18 @@ if robust:
     kurz_leverage += f"<li>In {len(_pos)} von {len(robust)} Städten mit genug Inseraten werden unsanierte Wohnungen der Baujahre 1950 bis 1994 günstiger angeboten als der Bestand gleicher Baujahre. Der größte Abschlag liegt in {_top['c']} bei {de(_top['spread'])} € je m².</li>"
 if tage_rows:
     kurz_leverage += f"<li>Die Hälfte der Inserate ist je nach Stadt seit {de(min(r['tage'] for r in tage_rows))} bis {de(max(r['tage'] for r in tage_rows))} Tagen online. Am längsten stehen Inserate in {', '.join(f"{x['c']} ({de(x['tage'])} Tage)" for x in sorted(tage_rows, key=lambda x: -x['tage'])[:3])}.</li>"
+_unter = sorted([r for r in rows if r['unter_pct'] is not None and (r.get('unter_basis') or 0) >= 50], key=lambda r: -r['unter_pct'])
+unter_block = (block('Anteil der Angebote unter Leverage-Marktwert (Inserate mit Bewertung, ab 50 je Stadt)', bars([(r['c'], r['unter_pct']) for r in _unter[:10]] + [(r['c'], r['unter_pct']) for r in _unter[-6:]], ' %', dec=0, lab=200, signed=False, vmin=0, rowh=22))
+               + src(f'Anteil der Inserate, deren Angebotspreis auf oder unter dem Leverage-Marktwert liegt. Oben die 10 Städte mit dem höchsten Anteil, unten die 6 mit dem niedrigsten. Über alle {len(rows)} Städte: {de(sum(r["unter_n"] for r in rows if r.get("unter_n", -1) >= 0) / max(1, sum(r["unter_basis"] for r in rows if r.get("unter_basis"))) * 100)} %.')) if _unter else ''
+_sp = sorted(rows, key=lambda r: -r['spread_eur'])
+spread_block = (block(f'Bruttorendite minus 12-Monats-Euribor ({de(F["euribor"]["m12"],2)} %), Prozentpunkte', bars([(r['c'], r['spread_eur']) for r in _sp[:10]] + [(r['c'], r['spread_eur']) for r in _sp[-6:]], ' Pp', dec=1, lab=200, rowh=22))
+                + src(f'Median-Bruttorendite der Stadt abzüglich 12-Monats-Euribor. Unter 2,0 bis 2,5 Prozentpunkten trägt die Miete den Flipper-Zins nicht; Halten statt Verkaufen rechnet sich dann nicht. {sum(1 for r in rows if r["spread_eur"] < 2.5)} von {len(rows)} Städten liegen unter 2,5 Prozentpunkten.'))
+unter_gesamt = sum(r["unter_n"] for r in rows if r.get("unter_n", -1) >= 0) / max(1, sum(r["unter_basis"] for r in rows if r.get("unter_basis"))) * 100
+kurz_stimmung = ''
+if (D/'stimmung.json').exists() and (D/'markt.json').exists():
+    _st, _mk = json.load(open(D/'stimmung.json')), json.load(open(D/'markt.json'))
+    kurz_stimmung = (f"<li>Die Stimmung dreht vor den Zahlen: {de(_st['bop_hh']['anteil_steigend']['wert'])} % der Haushalte erwarten steigende Preise (Juli: {de(_st['bop_hh']['anteil_steigend']['reihe'][0][1])} %), das Konsumklima liegt bei {sg(_st['konsumklima']['prognose']['wert'],1)} Punkten (Vorjahr {sg(_st['konsumklima']['prognose']['vorjahr'],1)}), {de(_st['ifo']['storno']['wert'],1)} % der Wohnungsbaufirmen melden Stornierungen (Vorjahr {de(_st['ifo']['storno']['vorjahr'],1)} %).</li>"
+                     f"<li>Die Kaufnachfrage je Inserat ist seit Mai um {de(abs(_mk['is24']['nachfrage_kauf_de_pct']))} % gesunken, am stärksten unter 3.000 € je m² ({sg(_mk['is24']['nachfrage_segment']['unter 3.000 €/m²'],0)} %). Zwangsversteigerungen: {de(_mk['zwangsversteigerungen']['h1'][-1][1])} Termine im ersten Halbjahr 2026, {sg(_mk['zwangsversteigerungen']['h1_2026_yoy'])} %.</li>")
 # ---------- Cover ----------
 cover = f'''<section class="cover-page">
 <div class="cover"><img class="clogo" src="data:image/png;base64,{LOGO_W}"/>
@@ -323,13 +345,11 @@ cover = f'''<section class="cover-page">
 <li>Kaufpreise geben nach, Mieten steigen. Wohnungen sind nominal {de(abs(P['greix']['etw_yoy']),1)} % günstiger als vor einem Jahr, Angebotsmieten {de(G['mieten']['greix_yoy'],1)} % teurer. Das verbessert die Rendite für Kapitalanleger als Käufer.</li>
 <li>Sanierung kostet {de(P['baupreise']['instand_yoy'],1)} % mehr. Gleichzeitig sinken die Wohnungspreise, die Marge hängt damit stärker am Einkaufspreis.</li>
 {kurz_leverage}
+<li>{de(unter_gesamt)} % der bewerteten Inserate in den {len(rows)} Städten sind auf oder unter Leverage-Marktwert angeboten, am häufigsten in {', '.join(f"{r['c']} ({de(r['unter_pct'])} %)" for r in _unter[:3])}. Die Bruttorendite liegt in {sum(1 for r in rows if r["spread_eur"] < 2.5)} von {len(rows)} Städten weniger als 2,5 Prozentpunkte über dem 12-Monats-Euribor.</li>
+{kurz_stimmung}
 <li>2025 wurde steuerlich Grundvermögen von {de(G['erbe']['grundvermoegen'],1)} Mrd. € vererbt oder verschenkt, {de(G['erbe']['grund_yoy'],1)} % mehr als im Vorjahr. Bis 2039 erreichen {de(G['boomer']['erwerbspersonen_rente_bis_2039'],1)} Mio. Erwerbspersonen das Rentenalter.</li>
 </ul>
-<div class="toc avoid"><h3>Inhalt</h3><ol>
-<li>Zinsen und Finanzierungsumfeld</li><li>Zwei Seiten der Finanzierung: Flipper und Käufer</li><li>Kaufnebenkosten und Förderung</li>
-<li>Preise und Mieten</li><li>Angebotsmarkt Deutschland: {len(rows)} Städte</li><li>Leistbarkeit: Was sich der Käufer leisten kann</li>
-<li>Baukosten, Energie und Regulierung</li><li>Zielgruppe: Haushalte, Einkommen, Wohnfläche</li><li>Demografie, Ruhestand und Erben</li>
-<li>Methodik und Quellen</li></ol></div>
+<div class="toc avoid"><h3>Inhalt</h3><ol>__TOC__</ol></div>
 </section>'''
 
 # ---------- 1 Zinsen ----------
@@ -350,7 +370,7 @@ cite('Deutsche Bundesbank', 'MFI-Zinsstatistik, Wohnungsbaukredite an private Ha
 cite('Deutsche Bundesbank', 'MFI-Zinsstatistik, Kredite an nichtfinanzielle Kapitalgesellschaften, Stand 02.11.2026', F['mfi_unternehmen']['url'])
 cite('Deutsche Bundesbank', 'Geldmarktsätze, Euribor (Quelle EMMI), Tageswerte 05.11.2026 und Monatsdurchschnitte', F['euribor']['url'])
 cite('Europäische Zentralbank', 'Geldpolitische Beschlüsse vom 29.10.2026', P['ezb']['url'])
-s1 = f'''<section class="sec brk"><h2>1 · Zinsen und Finanzierungsumfeld</h2>
+s1 = f'''<section class="sec brk"><h2>§ · Zinsen und Finanzierungsumfeld</h2>
 <p class="intro">Variable Zinsen bestimmen die Kosten der Projektfinanzierung, Zinsen mit 10 Jahren Bindung das Budget der Käuferinnen und Käufer.</p>
 {kpis(kpi(de(bz,2)+' %','Bauzins über 10 Jahre','Sep 2026, Bundesbank'),
       kpi(de(mw['var'],2)+' %','Wohnungsbaukredit variabel','bis 1 Jahr Zinsbindung, Sep 2026'),
@@ -394,7 +414,7 @@ def btab(a, b, la, lb):
            (f'Monatsrate ({de(bz,2)} % Zins, {de(tilg,2)} % Tilgung)', a['rate'], b['rate'])]
     body = ''.join(f'<tr><td class="c">{k}</td><td>{de(x)} €</td><td>{de(y)} €</td></tr>' for k, x, y in rws)
     return f'<table class="t"><thead><tr><th>Position</th><th>{la}</th><th>{lb}</th></tr></thead><tbody>{body}</tbody></table>'
-s2 = f'''<section class="sec"><h2>2 · Zwei Seiten der Finanzierung: Flipper und Käufer</h2>
+s2 = f'''<section class="sec"><h2>§ · Zwei Seiten der Finanzierung: Flipper und Käufer</h2>
 <p class="intro">Seite A rechnet eine Projektfinanzierung mit variablem Flipper-Darlehen (12-Monats-Euribor plus Aufschlag), Seite B eine Eigennutzer-Finanzierung mit 10 Jahren Zinsbindung. Die Annahmen stehen unter der jeweiligen Tabelle.</p>
 {block('Seite A: Was der Flipper finanziert (Rechenbeispiel Wohnung)', ftab(flip_by, flip_nw, 'Bayern (3,5 % GrESt)', 'NRW (6,5 % GrESt)'))}
 {src(f'Annahmen: Kaufpreis {de(FX["kauf"])} €, {FX["qm"]} m², Sanierung {de(FX["san_qm"])} € je m², Haltedauer {FX["monate"]} Monate, Zins = 12-Monats-Euribor ({de(_EU["m12"],2)} % am {_EU["datum"]}, Bundesbank) plus 2,5 Prozentpunkte Bankaufschlag (Erfahrungswert Team Flippɘr, Variante 2,0 Prozentpunkte als eigene Zeile). Vorjahr: Monatsdurchschnitt November 2025 plus 2,5 Prozentpunkte. Der Bundesbank-Durchschnitt für variable Unternehmenskredite bis 1 Mio. € liegt bei {de(F["mfi_unternehmen"]["bis1mio_var_sep26"],2)} % (Sep 2026) und ist für Projektfinanzierungen meist nicht erreichbar.')}
@@ -413,7 +433,7 @@ cite('ImmoScout24', 'Medieninformation Grunderwerbsteuer im Bundesländerverglei
 cite('KfW', 'Merkblatt Wohneigentum für Familien Bestandserwerb (308), Stand 08/2026', F['kfw308']['url'])
 cite('KfW', 'Merkblatt BEG Wohngebäude Kredit (261), Stand 09/2026', F['kfw261']['url'])
 gr = sorted([(k, v) for k, v in F['grest'].items() if k not in ('quelle', 'url')], key=lambda x: -x[1])
-s3 = f'''<section class="sec"><h2>3 · Kaufnebenkosten und Förderung</h2>
+s3 = f'''<section class="sec"><h2>§ · Kaufnebenkosten und Förderung</h2>
 {block('Grunderwerbsteuer nach Bundesland, 2026', bars(gr, ' %', dec=1, signed=False, lab=200, rowh=26))}
 {src('Quelle: ImmoScout24, Medieninformation vom 07.05.2026. Notar und Grundbuch zusätzlich rund 1 bis 1,5 % des Kaufpreises (Verbraucherzentrale).')}
 {note(f'Beim Flip fällt die Grunderwerbsteuer zweimal an, beim eigenen Einkauf und beim Käufer, dessen Budget sie schmälert. Auf {de(FX["kauf"])} € Kaufpreis sind das zwischen {de(FX["kauf"]*gr[-1][1]/100)} € ({gr[-1][0]}) und {de(FX["kauf"]*gr[0][1]/100)} € ({", ".join(k for k,v in gr if v==gr[0][1])}).')}
@@ -431,7 +451,7 @@ cite('Europace AG', 'EPX 9/26, 08.10.2026', P['epx']['url'])
 cite('Statistisches Bundesamt', 'Häuserpreisindex Q2 2026, PM Nr. 336 vom 24.09.2026', P['hpi']['url'])
 cite('Statistisches Bundesamt', 'Verbraucherpreisindex September 2026, PM Nr. 364', G['mieten']['vpi_url'])
 hpi = P['hpi']['etw_yoy']
-s4 = f'''<section class="sec"><h2>4 · Preise und Mieten</h2>
+s4 = f'''<section class="sec"><h2>§ · Preise und Mieten</h2>
 <p class="intro">Drei Kaufpreisindizes mit unterschiedlicher Methode (Notarverträge, Finanzierungsfälle, amtliche Transaktionsdaten) und zwei Mietindikatoren.</p>
 {kpis(kpi(sg(P['greix']['etw_qoq'])+' %','GREIX ETW ggü. Vorquartal','Q3 2026, nominal'),
       kpi(sg(P['greix']['etw_yoy'])+' %','GREIX ETW ggü. Vorjahr',f'real {sg(P["greix"]["etw_real_yoy"])} %'),
@@ -448,6 +468,54 @@ s4 = f'''<section class="sec"><h2>4 · Preise und Mieten</h2>
 {note(f'Wohnungen nominal {sg(P["greix"]["etw_yoy"])} %, Angebotsmieten {sg(G["mieten"]["greix_yoy"])} %. Bei sinkenden Preisen und steigenden Mieten steigt die rechnerische Bruttorendite für Kapitalanleger. Die stärksten Mietanstiege meldet GREIX für {", ".join(f"{k} ({sg(v)} %)" for k, v in sorted(G["mieten"]["staedte"].items(), key=lambda x: -x[1])[:3])}. Kreisfreie Großstädte außerhalb der Metropolen legen bei Wohnungspreisen zu ({sg(hpi["Kreisfreie Großstädte außerhalb der Metropolen"])} %), dicht besiedelte ländliche Kreise verlieren ({sg(hpi["Dicht besiedelte ländliche Kreise"])} %).')}
 </section>'''
 
+
+# ---------- Stimmung und Erwartung ----------
+ST = json.load(open(D/'stimmung.json')) if (D/'stimmung.json').exists() else None
+s_stimmung = ''
+if ST:
+    _b, _i, _k, _z, _e, _u = ST['bop_hh'], ST['ifo'], ST['konsumklima'], ST['zinserwartung'], ST['ezb_ces'], ST['umfragen']
+    cite('Deutsche Bundesbank', 'Studie zu Erwartungen von Privatpersonen (BOP-HH), Immobilienpreiserwartungen September 2026, veröffentlicht 13.10.2026', _b['url'])
+    cite('ifo Institut', 'Konjunkturumfrage Wohnungsbau September 2026 (16.10.2026), Werte wiedergegeben im SHK-Journal; Reihe aus Architekturblatt, cash-online, Börsen-Zeitung, DHZ', _i['url'])
+    cite('NIM Nürnberg Institut für Marktentscheidungen', 'Konsumklima powered by GfK, Pressemitteilung vom 28.10.2026', _k['url'])
+    cite('Interhyp AG', 'Zins-Update Oktober 2026 mit Bankenpanel, 15.10.2026; Vorjahrespanel November 2025 via cash-online', _z['url'])
+    cite('Europäische Zentralbank', 'Consumer Expectations Survey September 2026, Pressemitteilung vom 23.10.2026', _e['url'])
+    cite('Interhyp AG', 'Wohntraumstudie 2026, 21.10.2026', _u['interhyp_mieter_wunsch']['url'])
+    cite('Interhyp AG', 'Leistbarkeitsstudie 2026, 10.06.2026', _u['interhyp_leistbarkeit']['url'])
+    cite('Postbank / YouGov', 'Mieterumfrage Juli 2026, wiedergegeben bei fundresearch.de (dpa), 27.07.2026', _u['postbank_mieter_wunsch']['url'])
+    cite('DSGV', 'Vermögensbarometer 2026, wiedergegeben bei fundresearch.de (dpa), 27.10.2026', _u['dsgv']['url'])
+    _ip = [(mlabel(t), v) for t, v in _i['klima']['reihe']]; _lo, _hi, _st = auto_range([v for _, v in _ip])
+    _kp = [(mlabel(t), v) for t, v in _k['anschaffung']['reihe']]; _lo2, _hi2, _st2 = auto_range([v for _, v in _kp])
+    _zb = [('Nächste 1 bis 2 Monate gleichbleibend', _z['kurz']['gleich']), ('Nächste 1 bis 2 Monate fallend', _z['kurz']['fallend']), ('Nächste 1 bis 2 Monate steigend', _z['kurz']['steigend']),
+           ('Langfristig fallend', _z['lang']['fallend']), ('Langfristig steigend', _z['lang']['steigend']), ('Vorjahrespanel, Erwartung für 2026 steigend', _z['lang_vorjahr']['steigend'])]
+    s_stimmung = f'''<section class="sec"><h2>§ · Stimmung und Erwartung</h2>
+<p class="intro">Umfragen laufen den amtlichen Zahlen um Monate voraus. Haushalte, Baufirmen und Banken sagen hier, womit sie rechnen.</p>
+{kpis(kpi(sg(_b['preiserwartung_12m_mittel']['wert'])+' %','Erwartete Immobilienpreise in 12 Monaten',f'Haushalte, Mittelwert, Sep 2026 (Aug: {sg(_b["preiserwartung_12m_mittel"]["vormonat"])} %)'),
+      kpi(de(_b['anteil_steigend']['wert'])+' %','Haushalte erwarten steigende Preise',f'Sep 2026, Juli: {de(_b["anteil_steigend"]["reihe"][0][1])} %. Fallend: {de(_b["anteil_fallend"]["wert"])} %'),
+      kpi(sg(_e['hauspreis_12m']['wert'])+' %','Hauspreiserwartung Euroraum',f'EZB-Umfrage Sep 2026, Vorjahr {sg(_e["hauspreis_12m"]["vorjahr"])} %'), cols=3)}
+{kpis(kpi(sg(_i['klima']['wert'],1),'ifo Geschäftsklima Wohnungsbau',f'Saldo Sep 2026, Vorjahr {sg(_i["klima"]["vorjahr"],1)}'),
+      kpi(de(_i['storno']['wert'],1)+' %','Baufirmen mit Stornierungen',f'Wohnungsbau Sep 2026, Vorjahr {de(_i["storno"]["vorjahr"],1)} %'),
+      kpi(de(_i['auftragsmangel']['wert'],1)+' %','Baufirmen mit Auftragsmangel',f'Wohnungsbau Sep 2026, Vorjahr {de(_i["auftragsmangel"]["vorjahr"],1)} %'), cols=3)}
+{kpis(kpi(sg(_k['prognose']['wert'],1),'Konsumklima (Prognose Nov 2026)',f'Vorjahr {sg(_k["prognose"]["vorjahr"],1)} Punkte'),
+      kpi(sg(_k['anschaffung']['wert'],1),'Anschaffungsneigung Okt 2026',f'Vorjahr {sg(_k["anschaffung"]["vorjahr"],1)} Punkte'),
+      kpi(sg(_k['einkommen']['wert'],1),'Einkommenserwartung Okt 2026',f'Vorjahr {sg(_k["einkommen"]["vorjahr"],1)} Punkte'), cols=3)}
+{block(f'ifo Geschäftsklima Wohnungsbau, Saldo, letzte {len(_ip)} Monate', line_chart(_ip, _lo, _hi, dec=1, unit='', step=_st))}
+{src('Quelle: Konjunkturumfragen des ifo Instituts. Saldo aus positiven und negativen Antworten zu Lage und Erwartung. Oktoberwert erscheint Mitte November.')}
+{block(f'Anschaffungsneigung der Verbraucher, Punkte, letzte {len(_kp)} Monate', line_chart(_kp, _lo2, _hi2, dec=1, unit='', step=_st2))}
+{src('Quelle: NIM Konsumklima powered by GfK, rund 2.000 Interviews je Monat.')}
+{block('Zinserwartung der Banken (Interhyp-Bankenpanel, Anteil der Institute in %)', bars(_zb, ' %', dec=0, lab=300, signed=False, vmin=0))}
+{src(f'Quelle: Interhyp Zins-Update Oktober 2026. Bauzins 10 Jahre laut Interhyp rund {de(_z["bauzins10"],1)} %. Vorjahr: Interhyp-Panel November 2025, Erwartung für 2026 (60 % steigend, 20 % gleich, 20 % fallend).')}
+{block('Wunsch nach Wohneigentum und Leistbarkeit (Umfragen 2026)', f'<table class="t sm"><thead><tr><th>Kennzahl</th><th>Wert</th><th>Erhebung</th></tr></thead><tbody>'
+ f'<tr><td class="c">Mieterinnen und Mieter mit Wunsch nach Wohneigentum</td><td class="b">{de(_u["interhyp_mieter_wunsch"]["wert"])} %</td><td>Interhyp Wohntraumstudie, {_u["interhyp_mieter_wunsch"]["zeitraum"]}</td></tr>'
+ f'<tr><td class="c">Davon 23- bis 30-Jährige mit Kaufinteresse</td><td class="b">80 %</td><td>Interhyp Wohntraumstudie 2026</td></tr>'
+ f'<tr><td class="c">Mieter, die lieber im Eigentum wohnen würden</td><td class="b">{de(_u["postbank_mieter_wunsch"]["wert"],1)} %</td><td>Postbank/YouGov, {_u["postbank_mieter_wunsch"]["zeitraum"]}</td></tr>'
+ f'<tr><td class="c">Sehen Eigentum am ehesten über Erbschaft erreichbar</td><td class="b">45,8 %</td><td>Postbank/YouGov, Juli 2026</td></tr>'
+ f'<tr><td class="c">Sehen Immobilien in der Wunschregion als kaum leistbar</td><td class="b">{de(_u["interhyp_leistbarkeit"]["wert"])} %</td><td>Interhyp Leistbarkeitsstudie, {_u["interhyp_leistbarkeit"]["zeitraum"]} (2025: {de(_u["interhyp_leistbarkeit"]["vorjahr"])} %)</td></tr>'
+ f'<tr><td class="c">Halten den Markt für überdreht</td><td class="b">39 %</td><td>Interhyp Leistbarkeitsstudie 2026 (2025: 35 %)</td></tr>'
+ f'<tr><td class="c">Eigentümer, die mit dem Kauf zufrieden sind</td><td class="b">97 %</td><td>Interhyp Wohntraumstudie 2026</td></tr>'
+ f'<tr><td class="c">Besitzen Aktien oder Wertpapiere</td><td class="b">{de(_u["dsgv"]["aktien"])} %</td><td>DSGV Vermögensbarometer 2026, über 4.800 Befragte</td></tr></tbody></table>')}
+{note(f'{de(_b["anteil_steigend"]["wert"])} % der Haushalte erwarten steigende Preise, im Juli waren es {de(_b["anteil_steigend"]["reihe"][0][1])} %. Die Baufirmen melden mit {de(_i["storno"]["wert"],1)} % so viele Stornierungen wie seit Beginn der Reihe nicht (Vorjahr {de(_i["storno"]["vorjahr"],1)} %), das Klima im Wohnungsbau liegt mit {sg(_i["klima"]["wert"],1)} unter dem Vorjahr ({sg(_i["klima"]["vorjahr"],1)}). Konsumklima und Einkommenserwartung sind binnen eines Jahres von {sg(_k["prognose"]["vorjahr"],1)} auf {sg(_k["prognose"]["wert"],1)} und von {sg(_k["einkommen"]["vorjahr"],1)} auf {sg(_k["einkommen"]["wert"],1)} Punkte gefallen. {de(_u["interhyp_mieter_wunsch"]["wert"])} % der Mieterinnen und Mieter wollen Eigentum, {de(_u["interhyp_leistbarkeit"]["wert"])} % halten es in ihrer Region für kaum leistbar: Die Nachfrage ist da, das Budget fehlt. 80 % der Banken im Interhyp-Panel erwarten kurzfristig stabile Zinsen, langfristig rechnen 60 % mit fallenden.')}
+</section>'''
+
 # ---------- 5 Angebotsmarkt ----------
 cite('Leverage Immo GmbH', f'Eigene Auswertung von {de(n_total)} aktiven Wohnungsinseraten in {len(rows)} Städten, Abruf 07.11.2026', 'https://leverage.immo')
 qm_breaks = [2500, 3500, 4500, 6000]
@@ -462,17 +530,17 @@ def city_table(rs):
             return na(v, lambda x: de(x)+' €') + f'<span class="r">n={n}{" ⚠" if (v is not None and n < 10) else ""}</span>'
         body += (f'<tr><td class="c">{r["c"]}<span class="r">{r["r"]} km</span></td><td>{de(r["n"])}</td><td class="b">{de(r["qm"])} €</td>'
                  f'<td>{grp(r.get("altsan"), r.get("altsan_n", 0))}</td><td>{grp(r.get("alt"), r.get("alt_n", 0))}</td>'
-                 f'<td class="b">{na(r["spread"], lambda v: de(v)+" €") if not klein else "k. A."}</td><td>{de(r["rend"],1)} %</td><td>{sg(-r["disc"],1)} %</td>'
+                 f'<td class="b">{na(r["spread"], lambda v: de(v)+" €") if not klein else "k. A."}</td><td>{de(r["rend"],1)} %</td><td>{sg(-r["disc"],1)} %</td><td>{na(r["unter_pct"], lambda v: de(v)+" %")}</td>'
                  + (f'<td>{na(r.get("tage"), lambda v: de(v))}</td>' if SHOW_TAGE else '')
                  + (f'<td>{na(r["d_qm"], lambda v: sg(v,1)+" %")}</td>' if PREV else '') + '</tr>')
     return ('<table class="t sm"><thead><tr><th>Stadt</th><th>Inserate</th><th>Median €/m²</th><th>Unsaniert 1950 bis 1994</th><th>Bestand 1950 bis 1994</th>'
-            f'<th>Abschlag unsaniert</th><th>Brutto&shy;rendite</th><th>Angebot ggü. Marktwert</th>' + ('<th>Tage online</th>' if SHOW_TAGE else '') + ('<th>Preis Δ Vormonat</th>' if PREV else '') + f'</tr></thead><tbody>{body}</tbody></table>')
+            f'<th>Abschlag unsaniert</th><th>Brutto&shy;rendite</th><th>Angebot ggü. Marktwert</th><th>Anteil unter Marktwert</th>' + ('<th>Tage online</th>' if SHOW_TAGE else '') + ('<th>Preis Δ Vormonat</th>' if PREV else '') + f'</tr></thead><tbody>{body}</tbody></table>')
 half = (len(rows) + 1) // 2
 spread_top3 = ', '.join(f"{x['c']} ({de(x['spread'])} €)" for x in top_spread[:3])
 tage_sorted = sorted(tage_rows, key=lambda r: -r['tage'])
 tage_block = (block('Wie lange Wohnungen online sind (Median der aktiven Inserate, Tage)', bars([(r['c'], r['tage']) for r in tage_sorted[:10]] + [(r['c'], r['tage']) for r in tage_sorted[-6:]], ' Tage', dec=0, signed=False, lab=200, rowh=22, vmin=0))
               + src('Gemessen ab Erstveröffentlichung des Inserats.')) if tage_rows else ''
-s5 = f'''<section class="sec"><h2>5 · Angebotsmarkt Deutschland: {len(rows)} Städte</h2>
+s5 = f'''<section class="sec"><h2>§ · Angebotsmarkt Deutschland: {len(rows)} Städte</h2>
 <p class="intro">Auswertung aus der Leverage-Datenbank: {de(n_total)} aktive Wohnungsinserate, abgerufen am 07.11.2026. Medianwerte im Umkreis um die Stadtmitte.</p>
 {kpis(kpi(de(n_total),'Ausgewertete Inserate',f'{len(rows)} Städte, alle Bundesländer'),
       kpi(f'{over_mw} von {len(rows)}','Städte mit Angeboten über Marktwert','Median Angebot ggü. Leverage-Bewertung'),
@@ -481,6 +549,8 @@ s5 = f'''<section class="sec"><h2>5 · Angebotsmarkt Deutschland: {len(rows)} St
 {src('Nur Städte mit mindestens 8 Inseraten je Gruppe.')}
 {block('Höchste Bruttomietrenditen (Median)', bars([(r['c'], r['rend']) for r in top_rend[:12]], ' %', dec=1, signed=False, lab=200, vmin=0))}
 {tage_block}
+{unter_block}
+{spread_block}
 {note(f'Die größten Abschläge für unsanierte Wohnungen gegenüber dem Bestand gleicher Baujahre zeigen {spread_top3}. Die höchsten Bruttorenditen liegen in {", ".join(r["c"] for r in top_rend[:3])} bei Preisen von {de(min(r["qm"] for r in top_rend[:3]))} bis {de(max(r["qm"] for r in top_rend[:3]))} € je m² und {de(min(r["n"] for r in top_rend[:3]))} bis {de(max(r["n"] for r in top_rend[:3]))} Inseraten je Stadt. In {over_mw} von {len(rows)} Städten liegt der Median der Angebote über der Leverage-Bewertung.')}
 
 <div class="block avoid"><h3>Median-Angebotspreis Eigentumswohnungen, € je m²</h3><div class="mapw">{de_map(rows,'qm',lambda v: de(v),'€ je m²',qm_breaks)}</div></div>
@@ -491,9 +561,57 @@ s5 = f'''<section class="sec"><h2>5 · Angebotsmarkt Deutschland: {len(rows)} St
 {src('Unsaniert: Zustand laut Inserat sanierungsbedürftig. Bestand: Alle Inserate derselben Baujahre 1950 bis 1994. Abschlag: Median Bestand minus Median unsaniert, € je m². Werte nur ab 5 Inseraten je Gruppe und 50 Inseraten je Stadt (sonst k. A.). ⚠ = unter 10 Inserate. Angebot ggü. Marktwert: Positiver Wert heißt teurer angeboten als die Leverage-Bewertung. Radius siehe Methodik. Angebotspreise sind keine Kaufpreise.')}
 </section>'''
 
+
+# ---------- Marktdruck: Nachfrage, Genehmigungen, Zwangsversteigerungen, Suchinteresse ----------
+MK = json.load(open(D/'markt.json')) if (D/'markt.json').exists() else None
+TR = json.load(open(D/'trends.json')) if (D/'trends.json').exists() else None
+s_markt = ''
+if MK:
+    _is, _iw, _zv, _bg, _ex, _vd = MK['is24'], MK['immowelt'], MK['zwangsversteigerungen'], MK['baugenehmigungen'], MK['epx'], MK['vdp']
+    cite('ImmoScout24', 'WohnBarometer Q3 2026, 02.10.2026', _is['url'])
+    cite('immowelt', 'Pressemitteilung zum 3. Quartal 2026, 30.09.2026', _iw['url'])
+    cite('HAUSGOLD', 'Auswertung Anzeigendauer Q1 2025 bis Q1 2026', MK['hausgold']['url'])
+    cite('Argetra GmbH', 'Halbjahresbericht Zwangsversteigerungen 1/2026 (Juli 2026, via Haufe) und Jahresbericht 2025', _zv['url'])
+    cite('Statistisches Bundesamt', 'Baugenehmigungen, Konjunkturindikator buw110 (Stand 16.10.2026) und PM Nr. 370 vom 16.10.2026', _bg['url'])
+    cite('Europace AG', 'Hauspreisindex EPX September 2026, 08.10.2026', _ex['url'])
+    cite('Hypoport SE', 'Operative Kennziffern Q3 2026, 15.10.2026 (Transaktionsvolumen Europace)', _ex['transaktion']['url'])
+    cite('vdp Verband deutscher Pfandbriefbanken', 'Immobilienpreisindex Q2 2026, 10.08.2026', _vd['url'])
+    _bgp = [(mlabel(t), n) for t, n, _ in _bg['reihe']]; _lo, _hi, _st = auto_range([n for _, n in _bgp])
+    _bgb = block(f'Genehmigte Wohnungen je Monat, letzte {len(_bgp)} Monate', line_chart(_bgp, _lo, _hi, dec=0, unit='', step=_st, lab=60)) + src(f'Quelle: Destatis, Originalwerte, Wohn- und Nichtwohngebäude inkl. Baumaßnahmen im Bestand. Januar bis August 2026: {de(_bg["jan_aug_2026"])} Wohnungen, {sg(_bg["jan_aug_yoy"])} % ggü. Vorjahr. September erscheint Mitte November.')
+    _zvb = block('Zwangsversteigerungstermine Deutschland', bars([(k, n) for k, n, _ in _zv['jahre']] + [(k, n) for k, n, _ in _zv['h1']], '', dec=0, lab=150, signed=False, vmin=0)) + src(f'Quelle: Argetra. 1. Halbjahr 2026: {de(_zv["h1"][-1][1])} Termine ({sg(_zv["h1_2026_yoy"])} %), Verkehrswerte {de(_zv["h1"][-1][2],2)} Mrd. € ({sg(_zv["h1_2026_vw_yoy"])} %), Prognose 2026 rund {de(_zv["prognose_2026"])} Termine. Objektarten 2025: {de(_zv["objekte_2025"]["Ein- und Zweifamilienhäuser"],1)} % Ein- und Zweifamilienhäuser, {de(_zv["objekte_2025"]["Eigentumswohnungen"],1)} % Eigentumswohnungen.')
+    _segb = block('Kaufnachfrage nach Preissegment, Mai bis September 2026 ggü. Vorperiode (ImmoScout24)', bars(list(_is['nachfrage_segment'].items()), ' %', dec=0, lab=200)) + src('Quelle: ImmoScout24 WohnBarometer Q3 2026, Kontaktanfragen je Inserat, Bestandswohnungen.')
+    _trb = ''
+    if TR and TR.get('reihen'):
+        _mon = {}
+        for b_, pts in TR['reihen'].items():
+            for d_, v in pts:
+                _mon.setdefault(b_, {}).setdefault(d_[:7], []).append(v)
+        _beg = [b_ for b_ in ('Wohnung kaufen', 'Haus verkaufen', 'Zwangsversteigerung', 'Baufinanzierung') if b_ in _mon]
+        _mths = sorted(set.intersection(*(set(_mon[b_]) for b_ in _beg)))[-12:]
+        _rowsT = ''.join(f'<tr><td class="c">{b_}</td>' + ''.join(f'<td>{de(sum(_mon[b_][m])/len(_mon[b_][m]))}</td>' for m in _mths) + '</tr>' for b_ in _beg)
+        _trb = block('Suchinteresse bei Google (Deutschland, Monatsmittel, 100 = Höchstwert je Begriff im Zeitraum)', f'<table class="t sm"><thead><tr><th>Begriff</th>' + ''.join(f'<th>{mlabel(m)}</th>' for m in _mths) + f'</tr></thead><tbody>{_rowsT}</tbody></table>') + src('Quelle: Google Trends, wöchentliche Werte zu Monatsmitteln verdichtet. Relativ je Begriff, nicht zwischen Begriffen vergleichbar.')
+        cite('Google', 'Google Trends, Suchinteresse Deutschland, letzte 12 Monate', TR['url'])
+    s_markt = f'''<section class="sec"><h2>§ · Marktdruck: Nachfrage und Verkaufsdruck</h2>
+<p class="intro">Wie viel Nachfrage trifft auf wie viel Angebot, und wo entsteht Verkaufsdruck.</p>
+{kpis(kpi(sg(_is['nachfrage_kauf_de_pct'],0)+' %','Kaufnachfrage je Inserat',f'ImmoScout24, Mai bis Sep 2026 ggü. Vorperiode; Metropolen {sg(_is["nachfrage_metropolen_pct"],0)} %'),
+      kpi(sg(_is['nachfrage_miete_pct'],0)+' %','Mietnachfrage je Inserat','ImmoScout24, gleicher Zeitraum'),
+      kpi(de(_iw['kaufanfragen_anteil'],1)+' %','Anteil Kaufanfragen an allen Anfragen',f'immowelt Jan bis Aug 2026, Vorjahr {de(_iw["kaufanfragen_anteil_vj"],1)} %'), cols=3)}
+{kpis(kpi(de(_zv['h1'][-1][1]),'Zwangsversteigerungen 1. Hj. 2026',f'{sg(_zv["h1_2026_yoy"])} % ggü. Vorjahr, Ø Verkehrswert {de(_zv["h1_2026_vw_mittel"],-3)} €'),
+      kpi(sg(_bg['jan_aug_yoy'])+' %','Baugenehmigungen Jan bis Aug 2026',f'{de(_bg["jan_aug_2026"])} Wohnungen, Neubau Aug {sg(_bg["aug_neubau_yoy"])} %'),
+      kpi(de(_ex['transaktion']['q3_2026'],2)+' Mrd. €','Finanzierungsvolumen Europace Q3',f'Vorjahr {de(_ex["transaktion"]["q3_2025"],2)} Mrd. €'), cols=3)}
+{kpis(kpi(sg(_is['bestand_etw']['yoy'])+' %','Angebotspreise Bestandswohnungen',f'ImmoScout24 Q3 2026 ggü. Vorjahr, {de(_is["bestand_etw"]["qm"])} €/m²'),
+      kpi(sg(_vd['etw_yoy'])+' %','Transaktionspreise Eigentumswohnungen',f'vdp {_vd["quartal"]} ggü. Vorjahr (Pfandbriefbanken)'),
+      kpi(sg(_ex['etw'][2],2)+' %','Europace EPX Eigentumswohnungen',f'{_ex["monat"]} ggü. Vorjahr, Monat {sg(_ex["etw"][1],2)} %'), cols=3)}
+{_segb}
+{_bgb}
+{_zvb}
+{_trb}
+{note(f'Die Kaufnachfrage je Inserat ist seit Mai um {de(abs(_is["nachfrage_kauf_de_pct"]))} % gesunken, die Mietnachfrage um {de(_is["nachfrage_miete_pct"])} % gestiegen. Am stärksten fehlt die Nachfrage im günstigsten Segment unter 3.000 € je m² ({sg(_is["nachfrage_segment"]["unter 3.000 €/m²"],0)} %), also dort, wo Fix-und-Flip-Objekte eingekauft werden. Angebotspreise (ImmoScout24 {sg(_is["bestand_etw"]["yoy"])} %) laufen den Transaktionspreisen (vdp {sg(_vd["etw_yoy"])} %, GREIX {sg(P["greix"]["etw_yoy"])} %, EPX {sg(_ex["etw"][2],2)} %) davon. Zwangsversteigerungen steigen das dritte Jahr in Folge ({sg(_zv["h1_2026_yoy"])} % im ersten Halbjahr), die Verkehrswerte je Termin liegen bei rund {de(_zv["h1_2026_vw_mittel"],-3)} €. Laut HAUSGOLD standen Anzeigen im ersten Quartal 2026 in Hamburg rund 44 % und in Bayern rund 40 % länger online als ein Jahr zuvor.')}
+</section>'''
+
 # ---------- 6 Leistbarkeit ----------
 leist = sorted(rows, key=lambda r: -r['leist_qm'])
-s6 = f'''<section class="sec"><h2>6 · Leistbarkeit: Was sich der Käufer leisten kann</h2>
+s6 = f'''<section class="sec"><h2>§ · Leistbarkeit: Was sich der Käufer leisten kann</h2>
 <p class="intro">Der erzielbare Verkaufspreis hängt am Darlehen, das ein typischer Haushalt bekommt. Die Rechnung geht vom Median-Haushaltsnettoeinkommen aus.</p>
 {kpis(kpi(de(ek_med)+' €','Median-Haushaltsnettoeinkommen','pro Monat, EU-SILC 2025'),
       kpi(de(rate_med)+' €','Rate bei 35 % Belastung','Annahme für die Rechnung'),
@@ -518,7 +636,7 @@ cite('Statistisches Bundesamt', 'Zensus 2022, Heizungsart, PM Zensus 45', Z['hei
 cite('Bundesregierung', 'Neues Gebäudemodernisierungsgesetz, 29.07.2026', G['geg']['url'])
 cite('Deutscher Bundestag', 'Drittes Gesetz zur Änderung des BEHG, Beschluss 15.10.2026', G['co2']['url'])
 heiz = [(k, v) for k, v in Z['heizung'].items() if k != 'url']
-s7 = f'''<section class="sec"><h2>7 · Baukosten, Energie und Regulierung</h2>
+s7 = f'''<section class="sec"><h2>§ · Baukosten, Energie und Regulierung</h2>
 {kpis(kpi(sg(P['baupreise']['instand_yoy'])+' %','Instandhaltung Wohngebäude','Aug 2026 ggü. Vorjahr'),
       kpi(de(Z['fertig']['2025']),'Fertiggestellte Wohnungen 2025',f'{sg(Z["fertig"]["yoy"])} % ggü. 2024'),
       kpi(de(P['baugen']['jan_aug']),'Genehmigte Wohnungen',f'Jan bis Aug 2026, {sg(P["baugen"]["jan_aug_yoy"])} %'), cols=3)}
@@ -543,7 +661,7 @@ cite('Statistisches Bundesamt', 'Privathaushalte nach Haushaltsgröße, Tabellen
 cite('Statistisches Bundesamt', 'Reallöhne 2. Quartal 2026, PM Nr. 308 vom 27.08.2026', Z['loehne']['url'])
 cite('Bundesagentur für Arbeit', 'Arbeitsmarkt im Oktober 2026, 30.10.2026', Z['alq']['url'])
 eig = sorted(Z['eigentum']['laender'].items(), key=lambda x: -x[1])
-s8 = f'''<section class="sec"><h2>8 · Zielgruppe: Haushalte, Einkommen, Wohnfläche</h2>
+s8 = f'''<section class="sec"><h2>§ · Zielgruppe: Haushalte, Einkommen, Wohnfläche</h2>
 {kpis(kpi(de(Z['flaeche']['je_wohnung'],1)+' m²','Ø Wohnfläche je Wohnung','Bestand Ende 2025'),
       kpi(de(Z['flaeche']['je_person'],1)+' m²','Ø Wohnfläche je Person','Bestand Ende 2025'),
       kpi(de(Z['flaeche']['neubau25'],1)+' m²','Ø Neubauwohnung 2025',f'2007: {de(Z["flaeche"]["neubau07"],1)} m²'), cols=3)}
@@ -566,7 +684,7 @@ cite('Statistisches Bundesamt', 'Wanderungen 2025, PM Nr. 184 vom 01.06.2026', G
 cite('Statistisches Bundesamt', 'Bevölkerung 2025, PM Nr. 203 vom 16.06.2026', G['bev25']['url'])
 cite('Argetra GmbH', 'Jahresbericht Zwangsversteigerungen 2025, Januar 2026', G['zv']['url'])
 binnen = sorted(list(G['binnen']['gewinner'].items()) + list(G['binnen']['verlierer'].items()), key=lambda x: -x[1])
-s9 = f'''<section class="sec"><h2>9 · Demografie, Ruhestand und Erben</h2>
+s9 = f'''<section class="sec"><h2>§ · Demografie, Ruhestand und Erben</h2>
 <p class="intro">Die geburtenstarken Jahrgänge 1955 bis 1969 erreichen bis 2039 das Rentenalter.</p>
 {kpis(kpi(de(G['boomer']['erwerbspersonen_rente_bis_2039'],1)+' Mio.','Erreichen bis 2039 das Rentenalter',f'{G["boomer"]["anteil"]} % aller Erwerbspersonen'),
       kpi(de(G['alter']['ab67_2024'],1)+' Mio.','Menschen ab 67 (2024)',f'bis 2038: {de(G["alter"]["ab67_2038_von"],1)} bis {de(G["alter"]["ab67_2038_bis"],1)} Mio.'),
@@ -614,7 +732,7 @@ for a, b, c in SRC:
         continue
     seen.add((a, b)); src_items.append((a, b, c))
 src_html = ''.join(f'<li>{a} · {b}<br><span class="url">{c}</span></li>' for a, b, c in src_items)
-s11 = f'''<section class="sec brk"><h2>10 · Methodik und Quellen</h2>
+s11 = f'''<section class="sec brk"><h2>§ · Methodik und Quellen</h2>
 <p>Jede Zahl in diesem Report stammt aus einer der unten genannten Quellen oder ist eine nachvollziehbare Berechnung daraus. Annahmen in Rechenbeispielen sind direkt beim Beispiel genannt. Amtliche Daten erscheinen mit Verzögerung, deshalb steht bei jeder Kennzahl der Bezugszeitraum.</p>
 <p><b>Leverage-Angebotsdaten:</b> Aktive Inserate für Eigentumswohnungen zum Kauf aus mehreren Portalen, ohne Fremddatenbanken, Abruf 07.11.2026. Medianwerte je Stadt im Umkreis von 5 km um die Stadtmitte. In großen Städten 2 bis 3 km, weil eine Abfrage höchstens 1.000 Inserate zählt. In Städten mit weniger als 150 Inseraten im 5-km-Umkreis 10 km, dieser Umkreis kann Nachbarorte einschließen (z. B. Mainz und Wiesbaden, Potsdam und Berlin-Wannsee). Der verwendete Radius steht in der Tabelle unter dem Stadtnamen. Der Zustand stammt aus der Inseratsangabe, das Baujahr aus dem Inserat. Mieten und Marktwerte sind Schätzungen des Leverage-Bewertungsmodells, keine Angebotsmieten. Angebotspreise sind keine Kaufpreise.</p>
 <p><b>Grenzen dieser Ausgabe:</b> Kreisgenaue amtliche Daten zu Wanderung, Alter und Eigentum folgen im Quartalsreport. Für einige Kennzahlen lagen nur Sekundärquellen mit Verweis auf den Herausgeber vor (GREIX-Mietindex, Grunderwerbsteuersätze). Sie sind im Quellenverzeichnis so gekennzeichnet.</p>
@@ -675,7 +793,16 @@ def feinschliff(h):
     h = re.sub(r'(?<=\d) (?=Prozentpunkte)', '\u00a0', h)
     h = h.replace('CO2', 'CO₂')
     return h
-html = f'<!doctype html><html lang="de"><head><meta charset="utf-8"><style>{css}</style></head><body>{cover}{s1}{s2}{s3}{s4}{s5}{s6}{s7}{s8}{s9}{s11}</body></html>'
+SECS = [x for x in [s1, s2, s3, s4, s_stimmung, s5, s_markt, s6, s7, s8, s9, s_feeds, s11] if x]
+_titel = []
+def _kopf(sec):
+    m = re.search(r'(<h2>.*?</h2>\s*(?:<p class="intro">.*?</p>\s*)?(?:<div class="kpis[^"]*">.*?<!--/kpis-->\s*)?)', sec, re.S)
+    return sec.replace(m.group(1), '<div class="avoid">' + m.group(1) + '</div>', 1) if m else sec
+for i, sec in enumerate(SECS, 1):
+    SECS[i-1] = _kopf(sec.replace('<h2>§ · ', f'<h2>{i} · ', 1))
+    _titel.append(re.search(r'<h2>\d+ · (.*?)</h2>', SECS[i-1]).group(1))
+cover = cover.replace('__TOC__', ''.join(f'<li>{t}</li>' for t in _titel))
+html = f'<!doctype html><html lang="de"><head><meta charset="utf-8"><style>{css}</style></head><body>{cover}{"".join(SECS)}</body></html>'
 html = feinschliff(html)
 (R/'out').mkdir(exist_ok=True)
 (R/'out'/f'report_{MONTH}.html').write_text(html)
