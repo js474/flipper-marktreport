@@ -43,8 +43,8 @@ def text_aus(pfad):
 def pruefen(text):
     funde = []
     for zeile in text.splitlines():
-        if "http" in zeile:
-            continue
+        if "http" in zeile or (" " not in zeile.strip() and ("/" in zeile or "-" in zeile)):
+            continue   # URL oder umgebrochene URL-Fortsetzung
         for muster, name in REGELN:
             if re.search(muster, zeile, flags=re.I if name != "Wort Coaching/Coach" else 0):
                 funde.append((name, zeile.strip()[:140]))

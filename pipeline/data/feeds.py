@@ -10,33 +10,34 @@ R = pathlib.Path(__file__).resolve().parents[2]
 MONTH = os.environ.get('REPORT_MONTH') or sys.argv[1]
 TAGE = int(os.environ.get('FEED_TAGE', '35'))
 
-FEEDS = [
-    ('Deutsche Bundesbank, Pressenotizen', 'https://www.bundesbank.de/action/de/rss/pressenotizen'),
-    ('Deutsche Bundesbank, Statistiken', 'https://www.bundesbank.de/action/de/rss/statistiken'),
-    ('Destatis, Pressemitteilungen', 'https://www.destatis.de/SiteGlobals/Functions/RSSFeed/DE/RSSNewsfeed/Pressemitteilungen.xml'),
-    ('EZB, Pressemitteilungen', 'https://www.ecb.europa.eu/rss/press.html'),
-    ('ifo Institut, Pressemitteilungen', 'https://www.ifo.de/rss/pressemitteilungen'),
-    ('DIW Berlin, Pressemitteilungen', 'https://www.diw.de/de/diw_01.c.619586.de/rss_pressemitteilungen.xml'),
-    ('IW Köln', 'https://www.iwkoeln.de/rss.xml'),
-    ('KfW Research', 'https://www.kfw.de/%C3%9Cber-die-KfW/Newsroom/RSS-Feeds/RSS-Feed-Research.xml'),
-    ('vdp Verband deutscher Pfandbriefbanken', 'https://www.pfandbrief.de/site/de/vdp/presse/rss.xml'),
-    ('ZIA Zentraler Immobilien Ausschuss', 'https://zia-deutschland.de/feed/'),
-    ('GdW Bundesverband Wohnungswirtschaft', 'https://www.gdw.de/feed/'),
-    ('Haus & Grund Deutschland', 'https://www.hausundgrund.de/rss.xml'),
-    ('bulwiengesa', 'https://www.bulwiengesa.de/feed/'),
-    ('empirica', 'https://www.empirica-institut.de/feed/'),
-    ('Europace / Hypoport', 'https://report.europace.de/feed/'),
-    ('Interhyp Presse', 'https://www.interhyp.de/ueber-interhyp/presse/rss.xml'),
-    ('Dr. Klein Presse', 'https://www.drklein.de/feed.xml'),
-    ('ImmoScout24 Presse', 'https://www.immobilienscout24.de/unternehmen/presse/rss.xml'),
-    ('immowelt Presse', 'https://www.immowelt.de/presse/feed'),
-    ('Sparkassen-Finanzgruppe (DSGV) Presse', 'https://www.dsgv.de/rss.xml'),
-    ('Bundesinstitut BBSR', 'https://www.bbsr.bund.de/SiteGlobals/Functions/RSSFeed/DE/RSSNewsfeed/RSSNewsfeed.xml'),
-    ('Bundesagentur für Arbeit Presse', 'https://www.arbeitsagentur.de/rss/presse'),
-    ('Haufe Immobilien', 'https://www.haufe.de/xml/rss_132442.xml'),
-    ('Immobilien Zeitung', 'https://www.iz.de/rss'),
-    ('Handelsblatt Immobilien', 'https://www.handelsblatt.com/contentexport/feed/finanzen/immobilien'),
+FEEDS = [   # alle am 09.11.2026 geprüft (XML mit Einträgen aus 2026)
+    ('Deutsche Bundesbank', 'https://www.bundesbank.de/service/rss/de/633290/feed.rss'),
+    ('Deutsche Bundesbank, Pressenotizen', 'https://www.bundesbank.de/service/rss/de/633286/feed.rss'),
+    ('Destatis', 'https://www.destatis.de/SiteGlobals/Functions/RSSFeed/DE/RSSNewsfeed/Aktuell.xml'),
+    ('EZB', 'https://www.ecb.europa.eu/rss/press.html'),
+    ('ifo Institut', 'https://www.ifo.de/rss'),
+    ('DIW Berlin', 'https://www.diw.de/de/rss_press.xml'),
+    ('IW Köln', 'https://www.iwkoeln.de/rss/iw-pressemitteilungen.xml'),
+    ('IW Köln, Immobilienmärkte', 'https://www.iwkoeln.de/rss/immobilienmaerkte.xml'),
+    ('vdp Pfandbriefbanken', 'https://www.pfandbrief.de/feed/'),
+    ('vdp Pfandbriefbanken, Presseportal', 'https://www.presseportal.de/rss/pm_29608.rss2?langid=1'),
+    ('GdW', 'https://www.gdw.de/feed/'),
+    ('Haus & Grund', 'https://www.hausundgrund.de/rss/rss.xml'),
+    ('bulwiengesa', 'https://bulwiengesa.de/de/feed'),
+    ('Europace', 'https://europace.de/feed/'),
+    ('Interhyp', 'https://www.presseportal.de/rss/pm_12620.rss2?langid=1'),
+    ('ImmoScout24', 'https://www.presseportal.de/rss/pm_31321.rss2?langid=1'),
+    ('immowelt', 'https://www.presseportal.de/rss/pm_24964.rss2?langid=1'),
+    ('Bundesagentur für Arbeit', 'https://www.presseportal.de/rss/pm_6776.rss2?langid=1'),
+    ('Haufe Immobilien', 'https://www.haufe.de/xml/rss_129130.xml'),
+    ('Sprengnetter', 'https://www.sprengnetter.de/feed/'),
+    ('BFW Bundesverband', 'https://www.bfw-bund.de/feed/'),
+    ('IVD Immobilienverband', 'https://ivd.net/feed/'),
+    ('Bundesgerichtshof', 'https://www.bundesgerichtshof.de/DE/Service/RSSFeed/Function/RSS_PM.xml?nn=373238'),
+    ('Bundesfinanzministerium', 'https://www.bundesfinanzministerium.de/SiteGlobals/Functions/RSSFeed/DE/Pressemitteilungen/RSSPressemitteilungen.xml'),
     ('Tagesschau Wirtschaft', 'https://www.tagesschau.de/wirtschaft/index~rss2.xml'),
+    ('Spiegel Wirtschaft', 'https://www.spiegel.de/wirtschaft/index.rss'),
+    ('FAZ Wirtschaft', 'https://www.faz.net/rss/aktuell/wirtschaft/'),
 ]
 
 WORTE = re.compile(r'immobil|wohnung|wohnungsbau|baugenehm|baupreis|bauzins|baufinanz|hypothek|zins|euribor|leitzins|einlagesatz|'
@@ -132,5 +133,5 @@ json.dump(ergebnis, open(d / 'feeds.json', 'w'), ensure_ascii=False, indent=1)
 print(f"Feeds ok: {len(ergebnis['feeds_ok'])}, Fehler: {len(ergebnis['feeds_fehler'])}, relevante Meldungen seit {grenze}: {len(ergebnis['meldungen'])}")
 for k, v in ergebnis['feeds_fehler'].items():
     print('  FEHLER', k, v)
-if len(ergebnis['feeds_ok']) < 8:
+if len(ergebnis['feeds_ok']) < 12:
     sys.exit('Zu wenige Feeds erreichbar')

@@ -639,6 +639,37 @@ if MK:
 </section>'''
 
 # ---------- 6 Leistbarkeit ----------
+EG = json.load(open(D/'eigentum.json')) if (D/'eigentum.json').exists() else None
+reallohn_block = ''; eigentum_blocks = ''; insolvenz_block = ''; insolvenz_kpis = ''
+if EG:
+    _rl = EG['reallohn']
+    cite('Statistisches Bundesamt', 'Reallohnindex (zuletzt PM Nr. 308 vom 27.08.2026) und Häuserpreisindex, Basis 2025 = 100, Tabelle Stand 24.09.2026', _rl['url'])
+    reallohn_block = (block('Reallöhne und Wohnimmobilienpreise, Veränderung zum Vorjahresquartal in %', grouped([q for q, _, _ in _rl['reihe']], [a for _, a, _ in _rl['reihe']], [b for _, _, b in _rl['reihe']], 'Reallohnindex', 'Häuserpreisindex', dec=1, h=230))
+                      + src(f'Quelle: Destatis. Reallohn: Nominallohn ({sg(_rl["nominal_q2_26"])} % im 2. Quartal 2026) abzüglich Verbraucherpreise ({sg(_rl["vpi_q2_26"])} %). Häuserpreisindex Q4 2025 und Q1 2026 nach Basisumstellung revidiert. 3. Quartal 2026 erscheint Ende November (Löhne) bzw. Ende Dezember (Preise).'))
+    _mz, _ph, _ev, _zb = EG['mikrozensus'], EG['phf'], EG['evs'], EG['zensus_bund']
+    cite('Statistisches Bundesamt', 'Mikrozensus-Zusatzerhebung Wohnen, Eigentumsquote 2006 bis 2022 nach Ländern; West/Ost aus Datenreport 2024, Kapitel 6.1', _mz['url'])
+    cite('Deutsche Bundesbank', 'Monatsbericht April 2025, Vermögensbefragung PHF 2023; Anteil mit weiterem Immobilienvermögen aus Monatsbericht April 2023 (Welle 2021)', _ph['url'])
+    cite('Statistisches Bundesamt', 'Einkommens- und Verbrauchsstichprobe 2023, Haus- und Grundbesitz, Geld- und Immobilienvermögen, veröffentlicht 06.03.2026', _ev['url'])
+    cite('Eurostat', 'EU-SILC, Bevölkerung nach Wohnstatus (ilc_lvho02), News vom 05.02.2026', EG['eurostat']['url'])
+    cite('Statistische Ämter des Bundes und der Länder', 'Zensus 2022, Wohnungen nach Baujahr (Tabelle 4000X-1002) und Leerstand (PM Zensus Nr. 46)', _zb['url'])
+    _l18, _l22 = _mz['laender_2018'], _mz['laender_2022']
+    _lk = sorted(_l22, key=lambda k: -_l22[k])
+    eigentum_blocks = (block('Eigentumsquote Deutschland, Anteil der Haushalte im eigenen Wohneigentum (Mikrozensus)', bars(_mz['de'], ' %', dec=1, signed=False, lab=120, vmin=0, rowh=24))
+        + src(f'Quelle: Destatis, Mikrozensus-Zusatzerhebung Wohnen. Ab 2020 neue Methodik, 2022 nur eingeschränkt mit den Vorjahren vergleichbar. West {de(_mz["west_2022"],1)} % (2006: {de(_mz["west_2006"],1)} %), Ost inkl. Berlin {de(_mz["ost_2022"],1)} % (2006: {de(_mz["ost_2006"],1)} %). Eurostat zählt Personen statt Haushalte: {de(100-EG["eurostat"]["de_mieter_2024"])} % der Menschen in Deutschland wohnen im Eigentum, im EU-Schnitt {de(EG["eurostat"]["eu_eigentuemer_2024"],1)} % (2024).')
+        + block('Vermögen von Eigentümern und Mietern (Bundesbank-Vermögensbefragung 2023, Median je Haushalt)', bars([('Eigentümer ohne Hypothek', _ph['median_eigentuemer_ohne_hyp']), ('Eigentümer mit Hypothek', _ph['median_eigentuemer_mit_hyp']), ('Alle Haushalte', _ph['median_alle']), ('Mieterhaushalte', _ph['median_mieter'])], ' €', dec=0, signed=False, lab=220, vmin=0))
+        + src(f'Quelle: Deutsche Bundesbank, PHF 2023. {de(_ph["eigentum_hauptwohnsitz"][-1][1])} % der Haushalte besitzen ihren Hauptwohnsitz (2021: {de(_ph["eigentum_hauptwohnsitz"][-2][1])} %), {de(_ph["sonstiges_immobilienvermoegen_2021"])} % halten weiteres Immobilienvermögen, etwa vermietete Wohnungen (Welle 2021). Wert des Hauptwohnsitzes im Mittel {de(_ph["wert_hauptwohnsitz"],-3)} € (2021: {de(_ph["wert_hauptwohnsitz_2021"],-3)} €).')
+        + block('Haus- und Grundbesitz der Haushalte nach Art (EVS 2023, Anteil der Haushalte, Mehrfachnennung)', bars(list(_ev['arten'].items()), ' %', dec=1, signed=False, lab=260, vmin=0, rowh=24))
+        + src(f'Quelle: Destatis, EVS 2023, Stichtag 01.01.2023. {de(_ev["haus_grundbesitz"],1)} % aller Haushalte besitzen Haus- oder Grundbesitz (West {de(_ev["west"],1)} %, Ost {de(_ev["ost"],1)} %). Immobilienvermögen je Haushalt im Schnitt {de(_ev["immobilienvermoegen"][-1][1],-3)} € (2018: {de(_ev["immobilienvermoegen"][-2][1],-3)} €, 2008: {de(_ev["immobilienvermoegen"][0][1],-3)} €).')
+        + block('Wohnungsbestand Deutschland nach Baujahr (Zensus 2022, Anteil der Wohnungen in %)', bars(list(_zb['baujahr'].items()), ' %', dec=1, signed=False, lab=160, vmin=0, rowh=22))
+        + src(f'Quelle: Zensus 2022, {de(_zb["wohnungen"])} Wohnungen, Stichtag 15.05.2022. {de(sum(v for k, v in _zb["baujahr"].items() if k in ("vor 1919","1919 bis 1949","1950 bis 1959","1960 bis 1969","1970 bis 1979")),1)} % der Wohnungen sind vor 1980 gebaut. Leerstand {de(_zb["leerstand"],1)} %.'))
+    _in = EG['insolvenzen']
+    cite('Statistisches Bundesamt', 'Unternehmensinsolvenzen, PM Nr. 85 (13.03.2026), Nr. 325 (11.09.2026), Nr. 362 (09.10.2026), Tabelle nach Monaten', _in['url'])
+    cite('Creditreform', 'Insolvenzen in Deutschland, 1. Halbjahr 2026, 23.06.2026', _in['url2'])
+    insolvenz_kpis = kpis(kpi(de(_in['h1_2026']), 'Unternehmensinsolvenzen 1. Hj. 2026', f'{sg(_in["h1_2026_yoy"])} % ggü. Vorjahr, Juli {sg(_in["jul_2026_yoy"])} %'),
+                          kpi(de(_in['bau_je10k_h1_2026'],1), 'Insolvenzen je 10.000 Baufirmen', f'1. Hj. 2026, alle Branchen 36,2; Vorjahr {de(_in["bau_je10k_h1_2025"],1)}'),
+                          kpi(sg(_in['bau_yoy_h1_2026_creditreform'])+' %', 'Bauinsolvenzen ggü. Vorjahr', 'Creditreform, 1. Hj. 2026 (2025: ' + sg(_in['bau_yoy_2025_creditreform']) + ' %)'), cols=3)
+    insolvenz_block = (block('Unternehmensinsolvenzen je Monat, alle Branchen', bars(_in['monate_2025'] + _in['monate_2026'], '', dec=0, signed=False, lab=90, vmin=0, rowh=20))
+                       + src(f'Quelle: Destatis, beantragte Unternehmensinsolvenzen nach Monaten, Stand 09.10.2026. 2025 gesamt {de(_in["gesamt_2025"])} ({sg(_in["gesamt_2025_yoy"])} %). Das Baugewerbe liegt mit {de(_in["bau_je10k_2025"])} Insolvenzen je 10.000 Unternehmen (2025) deutlich über dem Durchschnitt von {de(_in["gesamt_je10k_2025"])}.'))
 leist = sorted(rows, key=lambda r: -r['leist_qm'])
 s6 = f'''<section class="sec"><h2>§ · Leistbarkeit: Was sich der Käufer leisten kann</h2>
 <p class="intro">Der erzielbare Verkaufspreis hängt am Darlehen, das ein typischer Haushalt bekommt. Die Rechnung geht vom Median-Haushaltsnettoeinkommen aus.</p>
@@ -648,6 +679,7 @@ s6 = f'''<section class="sec"><h2>§ · Leistbarkeit: Was sich der Käufer leist
 {block('Wie viele m² ein Median-Haushalt allein mit Darlehen finanzieren kann', bars([(r['c'], r['leist_qm']) for r in leist[:12]] + [(r['c'], r['leist_qm']) for r in leist[-8:]], ' m²', dec=0, signed=False, lab=200, rowh=24))}
 {src(f'Rechnung: Darlehen von {de(darl_med,-3)} € geteilt durch Median-Angebotspreis je m² der Stadt. Ohne Eigenkapital und Kaufnebenkosten. Oben die 12 günstigsten, unten die 8 teuersten Märkte der Auswertung. Zum Vergleich: Eine durchschnittliche Wohnung in Deutschland hat {de(Z["flaeche"]["je_wohnung"],1)} m².')}
 {note(f'Ein Haushalt mit Medianeinkommen finanziert in München rund {de(S["München"]["qm"] and darl_med/S["München"]["qm"])} m², in Leipzig rund {de(darl_med/S["Leipzig"]["qm"])} m². Ohne Eigenkapital reicht das Darlehen in {unter50} von {len(rows)} Städten für weniger als 50 m².')}
+{reallohn_block}
 {block('Anteil der Wohnkosten am verfügbaren Haushaltseinkommen (EU-SILC 2025)', bars([('Alle Haushalte',Z['wohnkosten']['anteil25']),('Alleinlebende',Z['wohnkosten']['allein']),('Alleinerziehende',Z['wohnkosten']['alleinerz'])], ' %', signed=False, lab=200, vmin=0))}
 {src('Quelle: Destatis, Anteil der Wohnkosten am verfügbaren Haushaltseinkommen, EU-SILC 2025.')}
 {block(f'Mietbelastung nach Haushaltsnettoeinkommen (Mikrozensus 2022, Durchschnitt {de(Z["mietbelastung"]["schnitt"],1)} %)', bars(list(Z['mietbelastung']['nach_einkommen'].items()), ' %', signed=False, lab=200, vmin=0))}
@@ -671,6 +703,8 @@ s7 = f'''<section class="sec"><h2>§ · Baukosten, Energie und Regulierung</h2>
       kpi(de(P['baugen']['jan_aug']),'Genehmigte Wohnungen',f'Jan bis Aug 2026, {sg(P["baugen"]["jan_aug_yoy"])} %'), cols=3)}
 {block('Preisanstieg einzelner Gewerke, Aug 2026 ggü. Vorjahr', bars([('Dachdeckerarbeiten',P['baupreise']['dach']),('Zimmer- und Holzbau',P['baupreise']['zimmer']),('Elektro, Sicherheit, IT',P['baupreise']['elektro']),('Erdarbeiten',P['baupreise']['erd']),('Instandhaltung gesamt',P['baupreise']['instand_yoy']),('Neubau Wohngebäude gesamt',P['baupreise']['wohn_yoy']),('Heizung inkl. Wärmepumpe',P['baupreise']['heizung'])], vmin=0, lab=220))}
 {src('Quelle: Destatis, Baupreisindex, PM Nr. 360 vom 09.10.2026.')}
+{insolvenz_kpis}
+{insolvenz_block}
 {block('Womit Deutschlands Wohnungen heizen (Zensus 2022)', bars(heiz, ' %', dec=0, signed=False, lab=260, vmin=0))}
 {src('Quelle: Destatis, Zensus 2022, Anteil der Wohnungen nach überwiegendem Energieträger. Stichtag 15.05.2022.')}
 {block('Was sich bei Heizung und CO2 geändert hat', f"""<table class="t"><tbody>
@@ -700,6 +734,7 @@ s8 = f'''<section class="sec"><h2>§ · Zielgruppe: Haushalte, Einkommen, Wohnfl
 {block('Wohnfläche Eigentümer und Mieter (Mikrozensus 2022)', f'<table class="t"><thead><tr><th></th><th>je Wohnung</th><th>je Person</th></tr></thead><tbody><tr><td class="c">Eigentümerhaushalte</td><td>{de(Z["flaeche"]["eig_wohnung"],1)} m²</td><td>{de(Z["flaeche"]["eig_person"],1)} m²</td></tr><tr><td class="c">Mieterhaushalte</td><td>{de(Z["flaeche"]["miet_wohnung"],1)} m²</td><td>{de(Z["flaeche"]["miet_person"],1)} m²</td></tr></tbody></table>')}
 {block('Eigentumsquote nach Bundesland (Mikrozensus 2022, Anteil Eigentümerhaushalte)', bars(eig, ' %', signed=False, lab=200, rowh=24, vmin=0))}
 {src('Quelle: Destatis, Eigentumsquote, Mikrozensus Zusatzprogramm Wohnen 2022. Deutschland gesamt '+de(Z['eigentum']['de'],1)+' %.')}
+{eigentum_blocks}
 {note(f'{de(Z["haushalte"]["single"],1)} % aller Haushalte sind Einpersonenhaushalte, weitere {de(Z["haushalte"]["zwei"],1)} % Zweipersonenhaushalte. Eigentümer wohnen auf {de(Z["flaeche"]["eig_wohnung"],1)} m², Mieter auf {de(Z["flaeche"]["miet_wohnung"],1)} m². Die niedrigsten Eigentumsquoten haben {", ".join(f"{k} ({de(v,1)} %)" for k, v in eig[-3:][::-1])}, dort wohnt die große Mehrheit zur Miete.')}
 </section>'''
 

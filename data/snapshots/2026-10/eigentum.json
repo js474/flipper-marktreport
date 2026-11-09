@@ -1,0 +1,61 @@
+{
+ "mikrozensus": {
+  "de": [["2006", 41.6], ["2010", 45.7], ["2014", 45.5], ["2018", 46.5], ["2022", 41.9]],
+  "west_2006": 44.2, "west_2022": 43.8, "ost_2006": 28.2, "ost_2022": 34.1,
+  "laender_2022": {"Saarland": 59.7, "Rheinland-Pfalz": 50.9, "Niedersachsen": 49.0, "Baden-Württemberg": 48.5, "Bayern": 45.8, "Schleswig-Holstein": 45.7, "Brandenburg": 44.3, "Hessen": 42.5, "Sachsen-Anhalt": 42.4, "Thüringen": 42.1, "Nordrhein-Westfalen": 38.6, "Mecklenburg-Vorpommern": 38.0, "Sachsen": 34.5, "Bremen": 32.0, "Hamburg": 20.3, "Berlin": 15.9},
+  "laender_2018": {"Saarland": 64.7, "Rheinland-Pfalz": 58.0, "Niedersachsen": 54.2, "Baden-Württemberg": 52.6, "Bayern": 51.4, "Schleswig-Holstein": 53.3, "Brandenburg": 47.8, "Hessen": 47.5, "Sachsen-Anhalt": 45.1, "Thüringen": 45.3, "Nordrhein-Westfalen": 43.7, "Mecklenburg-Vorpommern": 41.1, "Sachsen": 34.6, "Bremen": 37.8, "Hamburg": 23.9, "Berlin": 17.4},
+  "hinweis": "Methodenbruch 2020: Destatis stuft 2022 als nur eingeschränkt mit den Vorjahren vergleichbar ein.",
+  "quelle": "Statistisches Bundesamt, Mikrozensus-Zusatzerhebung Wohnen, Tabelle Eigentumsquote 2022 (Stand 19.02.2024) und Zeitreihe 2006 bis 2018 (Stand 11.01.2021); West/Ost aus Datenreport 2024, Kapitel 6.1",
+  "url": "https://www.destatis.de/DE/Themen/Gesellschaft-Umwelt/Wohnen/Tabellen/tabelle-eigentumsquote.html",
+  "url2": "https://www.destatis.de/EN/Themes/Society-Environment/Housing/Tables/owner-occupied-dwelling-rate.html"
+ },
+ "eurostat": {
+  "de_mieter_2024": 53, "de_mieter_2023": 52, "eu_eigentuemer_2024": 68.4, "eu_eigentuemer_2023": 69,
+  "quelle": "Eurostat, EU-SILC (ilc_lvho02), Anteil der Bevölkerung nach Wohnstatus; Eurostat News vom 05.02.2026 und Statistics Explained Living conditions in Europe, housing",
+  "url": "https://ec.europa.eu/eurostat/web/products-eurostat-news/w/ddn-20260205-1"
+ },
+ "phf": {
+  "eigentum_hauptwohnsitz": [["2010/11", 44], ["2014", 44], ["2017", 44], ["2021", 45], ["2023", 42]],
+  "median_eigentuemer_ohne_hyp": 450200, "median_eigentuemer_mit_hyp": 379900, "median_mieter": 18300, "median_alle": 103200, "mittel_alle": 324800,
+  "wert_hauptwohnsitz": 376300, "wert_hauptwohnsitz_2021": 343200,
+  "sonstiges_immobilienvermoegen_2021": 17,
+  "quelle": "Deutsche Bundesbank, Monatsbericht April 2025, Vermögen und Finanzen privater Haushalte in Deutschland: Ergebnisse der Vermögensbefragung 2023 (PHF); Anteil mit weiterem Immobilienvermögen aus Monatsbericht April 2023 (Welle 2021)",
+  "url": "https://publikationen.bundesbank.de/publikationen-de/berichte-studien/monatsberichte/vermoegen-und-finanzen-privater-haushalte-in-deutschland-ergebnisse-der-vermoegensbefragung-2023--954598",
+  "url2": "https://www.bundesbank.de/resource/blob/908138/5fa52fcaa9ad19972391d3c8c1bb82ce/mL/2023-04-vermoegensbefragung-data.pdf"
+ },
+ "evs": {
+  "haus_grundbesitz": 47.3, "west": 49.6, "ost": 38.1,
+  "arten": {"Einfamilienhäuser": 32.0, "Eigentumswohnungen": 14.4, "Unbebaute Grundstücke": 4.8, "Zweifamilienhäuser": 4.0, "Sonstige Gebäude": 2.7, "Wohngebäude mit 3 und mehr Wohnungen": 1.9},
+  "immobilienvermoegen": [["2008", 96400], ["2013", 103600], ["2018", 136000], ["2023", 190800]],
+  "nettogesamtvermoegen_2023": 230400, "nettogesamtvermoegen_2018": 162600,
+  "quelle": "Statistisches Bundesamt, Einkommens- und Verbrauchsstichprobe 2023 (Stichtag 01.01.2023), Haus- und Grundbesitz sowie Geld- und Immobilienvermögen, veröffentlicht 06.03.2026",
+  "url": "https://www.destatis.de/DE/Themen/Gesellschaft-Umwelt/Einkommen-Konsum-Lebensbedingungen/Vermoegen-Schulden/Tabellen/haus-grundbbesitz-evs.html",
+  "url2": "https://www.destatis.de/DE/Themen/Gesellschaft-Umwelt/Einkommen-Konsum-Lebensbedingungen/Vermoegen-Schulden/Tabellen/geld-immob-verm-schulden-evs.html"
+ },
+ "zensus_bund": {
+  "wohnungen": 43106589,
+  "baujahr": {"vor 1919": 13.2, "1919 bis 1949": 10.3, "1950 bis 1959": 11.5, "1960 bis 1969": 15.2, "1970 bis 1979": 14.5, "1980 bis 1989": 9.9, "1990 bis 1999": 12.0, "2000 bis 2009": 6.3, "2010 bis 2015": 3.2, "2016 und später": 3.9},
+  "leerstand": 4.3,
+  "quelle": "Zensus 2022, Wohnungen nach Baujahr (Tabelle 4000X-1002, Bundeswerte wiedergegeben in der Zensus-Auswertung der Stadt Braunschweig, Stand 25.06.2024); Leerstand aus Destatis-Pressemitteilung Nr. 46 vom 04.07.2024",
+  "url": "https://ergebnisse.zensus2022.de/datenbank/online/statistic/4000X/table/4000X-1002",
+  "url2": "https://www.destatis.de/DE/Presse/Pressemitteilungen/Zensus2022-Pressemitteilungen/PM_zenus2022_46.html"
+ },
+ "reallohn": {
+  "reihe": [["Q1 24", 3.8, -5.2], ["Q2 24", 3.1, -2.5], ["Q3 24", 2.9, -0.2], ["Q4 24", 2.5, 1.9], ["Q1 25", 1.2, 3.8], ["Q2 25", 1.9, 3.3], ["Q3 25", 2.7, 3.2], ["Q4 25", 1.9, 2.6], ["Q1 26", 1.8, 1.2], ["Q2 26", 1.5, 0.6]],
+  "format": "[Quartal, Reallohn ggü. Vorjahresquartal %, Häuserpreisindex ggü. Vorjahresquartal %]",
+  "nominal_q2_26": 4.1, "vpi_q2_26": 2.5, "jahr_2025": 1.9, "jahr_2024": 3.1,
+  "quelle": "Statistisches Bundesamt, Reallohnindex (Pressemitteilungen, zuletzt Nr. 308 vom 27.08.2026) und Häuserpreisindex, Basis 2025 = 100 (Tabelle Stand 24.09.2026)",
+  "url": "https://www.destatis.de/DE/Presse/Pressemitteilungen/2026/08/PD26_308_62321.html",
+  "url2": "https://www.destatis.de/DE/Themen/Wirtschaft/Preise/Baupreise-Immobilienpreisindex/Tabellen/Haeuserpreise-Bauland.html"
+ },
+ "insolvenzen": {
+  "gesamt_2025": 24064, "gesamt_2025_yoy": 10.3, "h1_2026": 12812, "h1_2026_yoy": 6.7, "jul_2026": 2373, "jul_2026_yoy": 8.0,
+  "monate_2026": [["Jan 26", 1919], ["Feb 26", 2048], ["Mrz 26", 2308], ["Apr 26", 2276], ["Mai 26", 1995], ["Jun 26", 2266], ["Jul 26", 2373]],
+  "monate_2025": [["Jul 25", 2197], ["Aug 25", 1979], ["Sep 25", 1940], ["Okt 25", 2108], ["Nov 25", 1794], ["Dez 25", 2037]],
+  "bau_je10k_2025": 104, "gesamt_je10k_2025": 69, "bau_je10k_h1_2026": 53.4, "bau_je10k_h1_2025": 52.3, "bau_je10k_jan_jul_2026": 62.9,
+  "bau_yoy_2025_creditreform": 4.7, "bau_yoy_h1_2026_creditreform": 4.5,
+  "quelle": "Statistisches Bundesamt, Unternehmensinsolvenzen (Pressemitteilungen Nr. 85 vom 13.03.2026, Nr. 325 vom 11.09.2026, Nr. 362 vom 09.10.2026, Tabelle Insolvenzen nach Monaten); Creditreform, Insolvenzen in Deutschland 1. Halbjahr 2026 (23.06.2026)",
+  "url": "https://www.destatis.de/DE/Presse/Pressemitteilungen/2026/10/PD26_362_52411.html",
+  "url2": "https://www.creditreform.de/aktuelles-wissen/pressemeldungen-fachbeitraege/news-details/show/insolvenzen-in-deutschland-1-halbjahr-2026"
+ }
+}
