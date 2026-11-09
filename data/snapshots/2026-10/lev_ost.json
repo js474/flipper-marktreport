@@ -15,7 +15,9 @@
   "rend": 4.05,
   "disc": 0.22,
   "neu30": 588,
-  "tage": 127
+  "tage": 127,
+  "unter_n": 135,
+  "unter_basis": 265
  },
  "Leipzig": {
   "r": 3,
@@ -33,7 +35,9 @@
   "rend": 5.16,
   "disc": -9.02,
   "neu30": 506,
-  "tage": 20
+  "tage": 20,
+  "unter_n": 210,
+  "unter_basis": 585
  },
  "Dresden": {
   "r": 5,
@@ -51,7 +55,9 @@
   "rend": 5.43,
   "disc": -6.22,
   "neu30": 679,
-  "tage": 20
+  "tage": 20,
+  "unter_n": 151,
+  "unter_basis": 436
  },
  "Chemnitz": {
   "r": 5,
@@ -69,7 +75,9 @@
   "rend": 9.6,
   "disc": 0.94,
   "neu30": 74,
-  "tage": 156
+  "tage": 156,
+  "unter_n": 58,
+  "unter_basis": 112
  },
  "Magdeburg": {
   "r": 10,
@@ -87,7 +95,9 @@
   "rend": 7.2,
   "disc": -3.27,
   "neu30": 88,
-  "tage": 181
+  "tage": 181,
+  "unter_n": 39,
+  "unter_basis": 106
  },
  "Halle": {
   "r": 10,
@@ -105,7 +115,9 @@
   "rend": 5.7,
   "disc": -5.78,
   "neu30": 34,
-  "tage": 179
+  "tage": 179,
+  "unter_n": 23,
+  "unter_basis": 51
  },
  "Erfurt": {
   "r": 10,
@@ -123,7 +135,9 @@
   "rend": 6.11,
   "disc": -3.41,
   "neu30": 24,
-  "tage": 158
+  "tage": 158,
+  "unter_n": 15,
+  "unter_basis": 42
  },
  "Rostock": {
   "r": 10,
@@ -141,7 +155,9 @@
   "rend": 5.0,
   "disc": 1.07,
   "neu30": 63,
-  "tage": 133
+  "tage": 133,
+  "unter_n": 19,
+  "unter_basis": 40
  },
  "Potsdam": {
   "r": 5,
@@ -159,7 +175,9 @@
   "rend": 3.67,
   "disc": -15.32,
   "neu30": 56,
-  "tage": 148
+  "tage": 148,
+  "unter_n": 11,
+  "unter_basis": 68
  },
  "Jena": {
   "r": 10,
@@ -177,7 +195,9 @@
   "rend": 5.09,
   "disc": -4.03,
   "neu30": 15,
-  "tage": 196
+  "tage": 196,
+  "unter_n": 12,
+  "unter_basis": 34
  },
  "Zwickau": {
   "r": 5,
@@ -195,7 +215,9 @@
   "rend": 10.56,
   "disc": 0.45,
   "neu30": 229,
-  "tage": 199
+  "tage": 199,
+  "unter_n": 16,
+  "unter_basis": 34
  },
  "Görlitz": {
   "r": 10,
@@ -213,6 +235,8 @@
   "rend": 10.16,
   "disc": -1.88,
   "neu30": 62,
-  "tage": 177
+  "tage": 177,
+  "unter_n": 6,
+  "unter_basis": 14
  }
 }

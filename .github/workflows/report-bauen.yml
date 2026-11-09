@@ -25,7 +25,7 @@ jobs:
       - name: Abhängigkeiten
         run: |
           npm ci --silent || npm i --silent
-          pip install -q playwright pymupdf
+          pip install -q playwright pymupdf pytrends
           python -m playwright install --with-deps chromium >/dev/null
       - name: Monat bestimmen
         id: m
@@ -38,6 +38,13 @@ jobs:
         env: { REPORT_MONTH: '${{ steps.m.outputs.monat }}' }
         run: |
           python pipeline/data/bundesbank.py 2>err.txt || echo "::warning::Bundesbank-Abruf fehlgeschlagen, Zinsverlauf entfällt: $(tail -c 600 err.txt | tr '\n' ' ')"
+      - name: Google Trends holen
+        env: { REPORT_MONTH: '${{ steps.m.outputs.monat }}' }
+        run: |
+          python pipeline/data/trends.py 2>err.txt || echo "::warning::Google-Trends-Abruf fehlgeschlagen, Block entfällt: $(tail -c 600 err.txt | tr '\n' ' ')"
+      - name: Feeds prüfen
+        run: |
+          test -f data/snapshots/${{ steps.m.outputs.monat }}/feeds.json || echo "::warning::feeds.json fehlt für ${{ steps.m.outputs.monat }} (Workflow 'Feeds holen' ausführen)"
       - name: Quellencheck
         run: python pipeline/qa/quellencheck.py ${{ steps.m.outputs.monat }}
       - name: PDF bauen
@@ -63,7 +70,7 @@ jobs:
           d.save("ausgaben/Immobilienhandel-Marktreport-$M.pdf", garbage=4, deflate=True)
           PY
           git config user.name "marktreport-bot"; git config user.email "actions@users.noreply.github.com"
-          git rm -q --cached --ignore-unmatch ausgaben/.loeschen || true; git add -A ausgaben/ data/snapshots/$M/kpi.json; [ -f data/snapshots/$M/bbk.json ] && git add data/snapshots/$M/bbk.json
+          git rm -q --cached --ignore-unmatch ausgaben/.loeschen || true; git add -A ausgaben/ data/snapshots/$M/kpi.json; for f in bbk trends; do [ -f data/snapshots/$M/$f.json ] && git add data/snapshots/$M/$f.json; done; true
           git commit -m "Ausgabe $M gebaut [skip ci]" || echo "keine Änderung"
           git pull --rebase -q origin main || true; git push || (git pull --rebase -q origin main && git push)
       - name: An Versand übergeben

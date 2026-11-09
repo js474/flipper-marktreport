@@ -64,9 +64,39 @@ def datum(s):
     except Exception:
         return None
 
+UA = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36 marktreport-feedreader/1.0',
+      'Accept': 'application/rss+xml, application/atom+xml, application/xml, text/xml, text/html;q=0.8, */*;q=0.5'}
+
+def lade(url):
+    import gzip
+    req = urllib.request.Request(url, headers=UA)
+    with urllib.request.urlopen(req, timeout=40) as r:
+        raw = r.read()
+        if r.headers.get('Content-Encoding') == 'gzip' or raw[:2] == b'\x1f\x8b':
+            raw = gzip.decompress(raw)
+    return raw
+
+def entdecke(url):
+    """Wenn url eine HTML-Seite ist: <link rel="alternate" type="application/rss+xml|atom+xml" href=...> auslesen."""
+    raw = lade(url)
+    kopf = raw[:200000].decode('utf-8', 'ignore')
+    m = re.search(r'<link[^>]+type=["\']application/(?:rss|atom)\+xml["\'][^>]*>', kopf, re.I)
+    if not m:
+        return None
+    h = re.search(r'href=["\']([^"\']+)', m.group(0))
+    if not h:
+        return None
+    from urllib.parse import urljoin
+    return urljoin(url, html.unescape(h.group(1)))
+
 def hole(name, url):
-    req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0 marktreport-feedreader/1.0'})
-    raw = urllib.request.urlopen(req, timeout=40).read()
+    raw = lade(url)
+    if raw.lstrip()[:1] != b'<' or b'<html' in raw[:2000].lower():
+        alt = entdecke(url)
+        if not alt:
+            raise ValueError('kein XML und kein Feed-Link auf der Seite')
+        raw = lade(alt); url = alt
+    raw = re.sub(rb'^[^<]*', b'', raw, count=1)
     root = ET.fromstring(raw)
     ns = {'a': 'http://www.w3.org/2005/Atom', 'dc': 'http://purl.org/dc/elements/1.1/'}
     items = root.findall('.//item') or root.findall('.//a:entry', ns)
@@ -88,7 +118,7 @@ for name, url in FEEDS:
     except Exception as e:
         ergebnis['feeds_fehler'][name] = f'{url}: {type(e).__name__}: {str(e)[:120]}'
         continue
-    ergebnis['feeds_ok'].append({'quelle': name, 'url': url, 'eintraege': len(eintraege)})
+    ergebnis['feeds_ok'].append({'quelle': name, 'url': url, 'eintraege': len(eintraege), 'neuester': max((e['datum'] or '' for e in eintraege), default=None)})
     for e in eintraege:
         if e['datum'] and e['datum'] < grenze:
             continue

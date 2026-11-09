@@ -15,7 +15,9 @@
   "rend": 3.31,
   "disc": 0.94,
   "neu30": 866,
-  "tage": 20
+  "tage": 20,
+  "unter_n": 294,
+  "unter_basis": 573
  },
  "Bremen": {
   "r": 5,
@@ -33,7 +35,9 @@
   "rend": 5.52,
   "disc": 3.32,
   "neu30": 410,
-  "tage": 20
+  "tage": 20,
+  "unter_n": 117,
+  "unter_basis": 209
  },
  "Hannover": {
   "r": 5,
@@ -51,7 +55,9 @@
   "rend": 5.17,
   "disc": 1.81,
   "neu30": 512,
-  "tage": 20
+  "tage": 20,
+  "unter_n": 71,
+  "unter_basis": 133
  },
  "Kiel": {
   "r": 10,
@@ -69,7 +75,9 @@
   "rend": 5.27,
   "disc": -7.73,
   "neu30": 120,
-  "tage": 149
+  "tage": 149,
+  "unter_n": 46,
+  "unter_basis": 174
  },
  "Lübeck": {
   "r": 10,
@@ -87,7 +95,9 @@
   "rend": 4.99,
   "disc": -6.37,
   "neu30": 69,
-  "tage": 178
+  "tage": 178,
+  "unter_n": 33,
+  "unter_basis": 94
  },
  "Osnabrück": {
   "r": 10,
@@ -105,7 +115,9 @@
   "rend": 4.76,
   "disc": -3.04,
   "neu30": 125,
-  "tage": 151
+  "tage": 151,
+  "unter_n": 39,
+  "unter_basis": 90
  },
  "Braunschweig": {
   "r": 10,
@@ -123,7 +135,9 @@
   "rend": 5.83,
   "disc": -4.36,
   "neu30": 89,
-  "tage": 168
+  "tage": 168,
+  "unter_n": 34,
+  "unter_basis": 77
  },
  "Kassel": {
   "r": 10,
@@ -141,7 +155,9 @@
   "rend": 5.26,
   "disc": -10.32,
   "neu30": 143,
-  "tage": 168
+  "tage": 168,
+  "unter_n": 46,
+  "unter_basis": 147
  },
  "Frankfurt": {
   "r": 3,
@@ -159,7 +175,9 @@
   "rend": 2.9,
   "disc": -8.73,
   "neu30": 488,
-  "tage": 20
+  "tage": 20,
+  "unter_n": 89,
+  "unter_basis": 261
  },
  "Wiesbaden": {
   "r": 5,
@@ -177,7 +195,9 @@
   "rend": 4.31,
   "disc": -10.15,
   "neu30": 70,
-  "tage": 156
+  "tage": 156,
+  "unter_n": 22,
+  "unter_basis": 64
  },
  "Mainz": {
   "r": 5,
@@ -195,7 +215,9 @@
   "rend": 4.83,
   "disc": -11.5,
   "neu30": 69,
-  "tage": 161
+  "tage": 161,
+  "unter_n": 23,
+  "unter_basis": 66
  },
  "Saarbrücken": {
   "r": 10,
@@ -213,6 +235,8 @@
   "rend": 6.06,
   "disc": -5.26,
   "neu30": 158,
-  "tage": 178
+  "tage": 178,
+  "unter_n": 50,
+  "unter_basis": 128
  }
 }

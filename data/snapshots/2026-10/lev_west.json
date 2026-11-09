@@ -15,7 +15,9 @@
   "rend": 4.52,
   "disc": -2.9,
   "neu30": 650,
-  "tage": 20
+  "tage": 20,
+  "unter_n": 134,
+  "unter_basis": 309
  },
  "Düsseldorf": {
   "r": 3,
@@ -33,7 +35,9 @@
   "rend": 4.44,
   "disc": 0.26,
   "neu30": 733,
-  "tage": 20
+  "tage": 20,
+  "unter_n": 129,
+  "unter_basis": 269
  },
  "Dortmund": {
   "r": 5,
@@ -51,7 +55,9 @@
   "rend": 5.41,
   "disc": -1.99,
   "neu30": 232,
-  "tage": 20
+  "tage": 20,
+  "unter_n": 61,
+  "unter_basis": 130
  },
  "Essen": {
   "r": 5,
@@ -69,7 +75,9 @@
   "rend": 6.23,
   "disc": -6.11,
   "neu30": 358,
-  "tage": 20
+  "tage": 20,
+  "unter_n": 63,
+  "unter_basis": 156
  },
  "Duisburg": {
   "r": 5,
@@ -87,7 +95,9 @@
   "rend": 7.71,
   "disc": -10.22,
   "neu30": 245,
-  "tage": 20
+  "tage": 20,
+  "unter_n": 55,
+  "unter_basis": 112
  },
  "Bochum": {
   "r": 5,
@@ -105,7 +115,9 @@
   "rend": 6.32,
   "disc": -7.23,
   "neu30": 147,
-  "tage": 20
+  "tage": 20,
+  "unter_n": 29,
+  "unter_basis": 73
  },
  "Münster": {
   "r": 5,
@@ -123,7 +135,9 @@
   "rend": 3.38,
   "disc": -13.01,
   "neu30": 241,
-  "tage": 20
+  "tage": 20,
+  "unter_n": 50,
+  "unter_basis": 139
  },
  "Bielefeld": {
   "r": 10,
@@ -141,7 +155,9 @@
   "rend": 5.48,
   "disc": -7.47,
   "neu30": 96,
-  "tage": 148
+  "tage": 148,
+  "unter_n": 29,
+  "unter_basis": 91
  },
  "Aachen": {
   "r": 10,
@@ -159,7 +175,9 @@
   "rend": 5.39,
   "disc": -3.95,
   "neu30": 96,
-  "tage": 147
+  "tage": 147,
+  "unter_n": 27,
+  "unter_basis": 62
  },
  "Bonn": {
   "r": 5,
@@ -177,7 +195,9 @@
   "rend": 4.98,
   "disc": -5.5,
   "neu30": 419,
-  "tage": 20
+  "tage": 20,
+  "unter_n": 86,
+  "unter_basis": 208
  },
  "Wuppertal": {
   "r": 10,
@@ -195,7 +215,9 @@
   "rend": 6.71,
   "disc": -15.13,
   "neu30": 103,
-  "tage": 161
+  "tage": 161,
+  "unter_n": 32,
+  "unter_basis": 94
  },
  "Gelsenkirchen": {
   "r": 5,
@@ -213,6 +235,8 @@
   "rend": 7.68,
   "disc": -9.27,
   "neu30": 92,
-  "tage": 20
+  "tage": 20,
+  "unter_n": 26,
+  "unter_basis": 65
  }
 }

@@ -63,8 +63,10 @@ darl_med_vj = rate_med * 12 / annu_vj
 # Flipper-Rechnung (Beispielannahmen, klar ausgewiesen)
 FX = dict(kauf=200000, qm=70, san_qm=1000, monate=12, fk=0.80)
 fx_san = FX['qm'] * FX['san_qm']
-fk_zins = F['mfi_unternehmen']['bis1mio_var_sep26']
-fk_zins_vj = F['mfi_unternehmen']['bis1mio_var_sep25']
+_EU = F['euribor']; _AUF = _EU['flipper_aufschlag']          # Flipper-Zins: 12-Monats-Euribor + Aufschlag
+fk_zins = _EU['m12'] + _AUF[1]                                  # Rechnung mit 2,5 Prozentpunkten (vorsichtig)
+fk_zins_lo = _EU['m12'] + _AUF[0]                               # Variante 2,0 Prozentpunkte
+fk_zins_vj = _EU['m12_nov25'] + _AUF[1]
 notar_pct = 1.5
 def flip_cost(grest):
     nk = FX['kauf'] * (grest + notar_pct) / 100
@@ -72,8 +74,9 @@ def flip_cost(grest):
     fk = basis * FX['fk']
     zins = fk * fk_zins / 100 * FX['monate'] / 12
     zins_vj = fk * fk_zins_vj / 100 * FX['monate'] / 12
+    zins_lo = fk * fk_zins_lo / 100 * FX['monate'] / 12
     ek = basis - fk + nk
-    return dict(nk=nk, fk=fk, zins=zins, zins_vj=zins_vj, ek=ek, total=FX['kauf'] + fx_san + nk + zins)
+    return dict(nk=nk, fk=fk, zins=zins, zins_vj=zins_vj, zins_lo=zins_lo, ek=ek, total=FX['kauf'] + fx_san + nk + zins)
 flip_by = flip_cost(F['grest']['Bayern'])
 flip_nw = flip_cost(F['grest']['Nordrhein-Westfalen'])
 
@@ -97,6 +100,8 @@ for c, s in S.items():
     r['abschlag'] = (s['altsan'] / s['alt'] - 1) * 100 if ok else None
     r['dyn'] = s['neu30'] / s['n'] * 100 if s.get('neu30') is not None and s['n'] else None
     r['gap'] = s['rend'] - bz
+    r['spread_eur'] = s['rend'] - F['euribor']['m12']          # Bruttorendite minus 12-Monats-Euribor (Prozentpunkte)
+    r['unter_pct'] = (s['unter_n'] / s['unter_basis'] * 100) if s.get('unter_basis') and s['unter_basis'] > 0 and s.get('unter_n', -1) >= 0 else None
     r['leist_qm'] = darl_med / s['qm']
     rows.append(r)
 rows.sort(key=lambda r: -r['qm'])
@@ -375,8 +380,9 @@ def ftab(a, b, la, lb):
     rws = [('Kaufpreis', FX['kauf'], FX['kauf']), (f'Sanierung ({FX["qm"]} m² × {de(FX["san_qm"])} €)', fx_san, fx_san),
            ('Kaufnebenkosten (Grunderwerbsteuer + 1,5 % Notar/Grundbuch)', a['nk'], b['nk']),
            (f'Fremdkapital ({de(FX["fk"]*100)} % auf Kauf + Sanierung)', a['fk'], b['fk']),
-           (f'Zinskosten {FX["monate"]} Monate bei {de(fk_zins,2)} %', a['zins'], b['zins']),
-           (f'Zinskosten vor einem Jahr ({de(fk_zins_vj,2)} %)', a['zins_vj'], b['zins_vj']),
+           (f'Zinskosten {FX["monate"]} Monate bei {de(fk_zins,2)} % (Euribor 12 M + 2,5 Pp)', a['zins'], b['zins']),
+           (f'Zinskosten bei {de(fk_zins_lo,2)} % (Euribor 12 M + 2,0 Pp)', a['zins_lo'], b['zins_lo']),
+           (f'Zinskosten vor einem Jahr ({de(fk_zins_vj,2)} %, Euribor Nov 2025 + 2,5 Pp)', a['zins_vj'], b['zins_vj']),
            ('Eigenkapitalbedarf inkl. Nebenkosten', a['ek'], b['ek']),
            ('Gesamtkosten bis Verkauf (ohne Makler, Gebühren, Steuern)', a['total'], b['total'])]
     body = ''.join(f'<tr><td class="c">{k}</td><td>{de(x)} €</td><td>{de(y)} €</td></tr>' for k, x, y in rws)
@@ -389,9 +395,9 @@ def btab(a, b, la, lb):
     body = ''.join(f'<tr><td class="c">{k}</td><td>{de(x)} €</td><td>{de(y)} €</td></tr>' for k, x, y in rws)
     return f'<table class="t"><thead><tr><th>Position</th><th>{la}</th><th>{lb}</th></tr></thead><tbody>{body}</tbody></table>'
 s2 = f'''<section class="sec"><h2>2 · Zwei Seiten der Finanzierung: Flipper und Käufer</h2>
-<p class="intro">Seite A rechnet eine Projektfinanzierung mit variablem Unternehmenskredit, Seite B eine Eigennutzer-Finanzierung mit 10 Jahren Zinsbindung. Die Annahmen stehen unter der jeweiligen Tabelle.</p>
+<p class="intro">Seite A rechnet eine Projektfinanzierung mit variablem Flipper-Darlehen (12-Monats-Euribor plus Aufschlag), Seite B eine Eigennutzer-Finanzierung mit 10 Jahren Zinsbindung. Die Annahmen stehen unter der jeweiligen Tabelle.</p>
 {block('Seite A: Was der Flipper finanziert (Rechenbeispiel Wohnung)', ftab(flip_by, flip_nw, 'Bayern (3,5 % GrESt)', 'NRW (6,5 % GrESt)'))}
-{src(f'Annahmen: Kaufpreis {de(FX["kauf"])} €, {FX["qm"]} m², Sanierung {de(FX["san_qm"])} € je m², Haltedauer {FX["monate"]} Monate, Zins wie Bundesbank-Durchschnitt für variable Unternehmenskredite bis 1 Mio. € (Sep 2026 bzw. Sep 2025). Individuelle Konditionen liegen bei Projektfinanzierungen oft darüber.')}
+{src(f'Annahmen: Kaufpreis {de(FX["kauf"])} €, {FX["qm"]} m², Sanierung {de(FX["san_qm"])} € je m², Haltedauer {FX["monate"]} Monate, Zins = 12-Monats-Euribor ({de(_EU["m12"],2)} % am {_EU["datum"]}, Bundesbank) plus 2,5 Prozentpunkte Bankaufschlag (Erfahrungswert Team Flippɘr, Variante 2,0 Prozentpunkte als eigene Zeile). Vorjahr: Monatsdurchschnitt November 2025 plus 2,5 Prozentpunkte. Der Bundesbank-Durchschnitt für variable Unternehmenskredite bis 1 Mio. € liegt bei {de(F["mfi_unternehmen"]["bis1mio_var_sep26"],2)} % (Sep 2026) und ist für Projektfinanzierungen meist nicht erreichbar.')}
 {note(f'Die Zinskosten des Projekts sind binnen eines Jahres um rund {de(flip_by["zins"]-flip_by["zins_vj"],-1)} € gestiegen. Jeder zusätzliche Monat Haltedauer kostet im Beispiel rund {de(flip_by["zins"]/FX["monate"])} €. Zwischen Bayern und NRW liegen allein bei der Grunderwerbsteuer {de(flip_nw["nk"]-flip_by["nk"])} € Unterschied, die vor Verkauf als Eigenkapital gebunden sind.')}
 <div class="avoid">{block('Seite B: Was der Käufer finanziert (Rechenbeispiel Eigennutzer)', btab(buy_by, buy_nw, 'Bayern', 'NRW'))}
 {src(f'Annahmen: Kaufpreis {de(KX["preis"])} €, Beleihungsauslauf {de(KX["bel"],1)} % und Tilgung {de(tilg,2)} % entsprechen dem Durchschnitt laut Dr. Klein Trendindikator (2. Tertial 2026), Zins laut Bundesbank (über 10 Jahre, Sep 2026). Makler nicht berücksichtigt.')}
@@ -574,6 +580,32 @@ s9 = f'''<section class="sec"><h2>9 · Demografie, Ruhestand und Erben</h2>
 {src('Quelle: Destatis, PM Nr. 203 vom 16.06.2026.')}
 {note(f'Die Erbschaftsteuerstatistik erfasst nur Fälle oberhalb der Freibeträge, das tatsächliche Volumen ist deutlich höher. Das DIW schätzt für 2002 bis 2017 im Schnitt {de(G["diw"]["wert"])} Mrd. € pro Jahr und hält das für eher unterschätzt. 2025 verlieren Thüringen und Sachsen-Anhalt Einwohner, Brandenburg, Bayern und Schleswig-Holstein gewinnen. Die Zahl der Haushalte sinkt laut Destatis bis 2050 auf {de(G["haushalte"]["2050_von"],1)} bis {de(G["haushalte"]["2050_bis"],1)} Mio. (2024: {de(G["haushalte"]["2024"],1)} Mio.).')}
 </section>'''
+
+# ---------- Meldungen des Monats (RSS-Feeds) ----------
+s_feeds = ''
+FEEDS = json.load(open(D/'feeds.json')) if (D/'feeds.json').exists() else None
+if FEEDS and FEEDS.get('meldungen'):
+    _prio = ['Bundesbank', 'Destatis', 'EZB', 'ifo', 'DIW', 'IW Köln', 'KfW', 'vdp', 'GdW', 'ZIA', 'BBSR', 'bulwiengesa', 'empirica', 'Europace', 'Interhyp', 'Dr. Klein', 'ImmoScout', 'immowelt']
+    def _rang(m):
+        q = m['quelle']
+        return next((i for i, p_ in enumerate(_prio) if p_.lower() in q.lower()), len(_prio))
+    _ml = [m for m in FEEDS['meldungen'] if m.get('datum')]
+    _auswahl = sorted(_ml, key=lambda m: (_rang(m), m['datum']), reverse=False)
+    # je Quelle höchstens 2, insgesamt 14, dann nach Datum absteigend
+    _seen = {}; _pick = []
+    for m in sorted(_auswahl, key=lambda m: (_rang(m), -int(m['datum'].replace('-', '')))):
+        if _seen.get(m['quelle'], 0) >= 2: continue
+        _seen[m['quelle']] = _seen.get(m['quelle'], 0) + 1; _pick.append(m)
+        if len(_pick) >= 14: break
+    _pick.sort(key=lambda m: m['datum'], reverse=True)
+    _li = ''.join(f'<li><span class="fd">{m["datum"][8:10]}.{m["datum"][5:7]}.</span> <b>{m["quelle"]}:</b> {m["titel"]}<br><span class="url">{m["link"]}</span></li>' for m in _pick)
+    _fq = ', '.join(f['quelle'] for f in FEEDS['feeds_ok'])
+    s_feeds = f'''<section class="sec"><h2>{{NR_FEEDS}} · Meldungen des Monats</h2>
+<p class="intro">Automatisch gelesen aus {len(FEEDS['feeds_ok'])} Nachrichten-Feeds seit dem {FEEDS['zeitraum_ab'][8:10]}.{FEEDS['zeitraum_ab'][5:7]}.{FEEDS['zeitraum_ab'][:4]}, gefiltert auf Immobilien, Zinsen, Bau und Haushalte. {len(FEEDS['meldungen'])} relevante Meldungen, hier die wichtigsten {len(_pick)}.</p>
+<ol class="srcl feeds">{_li}</ol>
+{src('Gelesene Feeds: ' + _fq + '. Stand ' + FEEDS['stand'][8:10] + '.' + FEEDS['stand'][5:7] + '.' + FEEDS['stand'][:4] + '. Überschriften im Wortlaut der Herausgeber.')}
+</section>'''
+    cite('Diverse Herausgeber', f'Pressemitteilungen und Meldungen aus {len(FEEDS["feeds_ok"])} RSS-Feeds, Zeitraum ab {FEEDS["zeitraum_ab"]}, siehe Kapitel Meldungen des Monats', 'siehe Einzellinks im Kapitel')
 
 # ---------- Methodik / Quellen ----------
 seen, src_items = set(), []
