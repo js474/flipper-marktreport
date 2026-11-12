@@ -1,7 +1,8 @@
 """Fehler-Waechter. Nur harte Fakten aus GitHub-API und Slack-Meldung, keine Annahmen.
 Aufruf: python pipeline/wachter/wachter.py [woche]
-Env: GH_READ_TOKEN (optional, noetig fuer private Repos), GITHUB_TOKEN, SLACK_WEBHOOK_URL (optional)
-Exit 1 bei Befunden, damit GitHub den Lauf rot markiert und Mail schickt."""
+Env: GH_READ_TOKEN (optional, noetig fuer private Repos), GITHUB_TOKEN
+Keine Nachricht an Johannes. Befunde landen als Zeilen "BEFUND {json}" im Log und als Warnung im Lauf.
+Die Claude-Aufgabe "Fehler-Waechter Automationen" liest sie und behebt sie. Exit 0, damit GitHub keine Fehlermail schickt."""
 import base64, json, os, sys, urllib.request, urllib.error
 from datetime import datetime, timedelta, timezone
 
@@ -68,7 +69,7 @@ def pruefe_remix(f):
 
 def selbstpruefung(f):
     """Woechentlich: prueft, ob der Waechter selbst alles erreicht, was er braucht."""
-    for name in ["SLACK_WEBHOOK_URL", "GH_READ_TOKEN"]:
+    for name in ["GH_READ_TOKEN"]:
         if not os.environ.get(name):
             f.append(finding(f"Wächter unvollständig: Secret {name} fehlt",
                 f"Umgebungsvariable {name} ist im Lauf leer.",
@@ -78,20 +79,6 @@ def selbstpruefung(f):
     if s == 200:
         rot = [r for r in d.get("workflow_runs", []) if r.get("conclusion") == "failure"]
         print(f"Selbsttest: {len(d.get('workflow_runs', []))} Läufe, davon {len(rot)} mit Befund.")
-
-def slack(f):
-    url = os.environ.get("SLACK_WEBHOOK_URL")
-    if not url:
-        return False
-    text = "*Fehler-Wächter " + NOW.strftime("%d.%m.%Y") + "*\n" + "\n\n".join(
-        f"*Was:* {x['was']}\n*Warum:* {x['warum']}\n*Versucht:* {x['versucht']}\n*Johannes:* {x['johannes']}" for x in f)
-    req = urllib.request.Request(url, data=json.dumps({"text": text}).encode(), headers={"Content-Type": "application/json"})
-    try:
-        urllib.request.urlopen(req, timeout=30)
-        return True
-    except Exception as e:
-        print("Slack-Versand fehlgeschlagen:", e)
-        return False
 
 def main():
     f = []
@@ -103,12 +90,10 @@ def main():
     if not f:
         print("Keine Befunde.")
         return 0
-    gesendet = slack(f)
     for x in f:
-        print(json.dumps(x, ensure_ascii=False, indent=2))
-    if not gesendet:
-        print("::error::Befunde vorhanden, Slack nicht erreicht. Details im Log.")
-    return 1
+        print("BEFUND " + json.dumps(x, ensure_ascii=False))
+        print("::warning::" + x["was"])
+    return 0
 
 if __name__ == "__main__":
     sys.exit(main())

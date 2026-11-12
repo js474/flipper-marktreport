@@ -17,6 +17,5 @@ jobs:
         env:
           GH_READ_TOKEN: ${{ secrets.GH_READ_TOKEN }}
           GITHUB_TOKEN: ${{ github.token }}
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: |
           if [ "$(date -u +%u)" = "1" ]; then python pipeline/wachter/wachter.py woche; else python pipeline/wachter/wachter.py; fi
