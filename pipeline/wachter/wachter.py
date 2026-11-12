@@ -31,7 +31,7 @@ def pruefe_repo(repo, f):
         f.append(finding(f"{repo} nicht prüfbar",
             f"GitHub-API antwortet HTTP {s} auf repos/{repo} ({wo}). Bei 404 ist das Repo privat oder der Name falsch.",
             "Abruf mit vorhandenem Token, ohne Ergebnis.",
-            "Repo-Setting Secrets: Secret GH_READ_TOKEN in js474/flipper-marktreport anlegen (Fine-grained Token, Repo-Zugriff auf alle drei Repos, Rechte Actions: Read, Contents: Read, Metadata: Read)."))
+            "Secret GH_READ_TOKEN in js474/flipper-marktreport anlegen (Fine-grained Token, Expiration: No expiration, Repository access: All repositories, Rechte Actions, Contents, Metadata jeweils Read-only)."))
         return
     since = (NOW - timedelta(hours=24)).strftime("%Y-%m-%dT%H:%M:%SZ")
     s, d = get(f"repos/{repo}/actions/runs?status=failure&created=%3E%3D{since}&per_page=20")
@@ -80,9 +80,24 @@ def selbstpruefung(f):
         rot = [r for r in d.get("workflow_runs", []) if r.get("conclusion") == "failure"]
         print(f"Selbsttest: {len(d.get('workflow_runs', []))} Läufe, davon {len(rot)} mit Befund.")
 
+def alle_repos():
+    """Mit GH_READ_TOKEN: alle eigenen Repos von js474 (auch neue). Ohne: feste Liste."""
+    if not os.environ.get("GH_READ_TOKEN"):
+        return REPOS
+    repos, seite = [], 1
+    while True:
+        s, d = get(f"user/repos?affiliation=owner&per_page=100&page={seite}")
+        if s != 200 or not d:
+            break
+        repos += [r["full_name"] for r in d if not r.get("archived")]
+        if len(d) < 100:
+            break
+        seite += 1
+    return repos or REPOS
+
 def main():
     f = []
-    for r in REPOS:
+    for r in alle_repos():
         pruefe_repo(r, f)
     pruefe_remix(f)
     if "woche" in sys.argv:
