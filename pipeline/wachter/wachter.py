@@ -1,4 +1,4 @@
-"""Fehler-Waechter. Nur harte Fakten aus GitHub-API und Slack-Meldung, keine Annahmen.
+"""Fehler-Waechter. Nur harte Fakten aus der GitHub-API, keine Annahmen.
 Aufruf: python pipeline/wachter/wachter.py [woche]
 Env: GH_READ_TOKEN (optional, noetig fuer private Repos), GITHUB_TOKEN
 Keine Nachricht an Johannes. Befunde landen als Zeilen "BEFUND {json}" im Log und als Warnung im Lauf.
