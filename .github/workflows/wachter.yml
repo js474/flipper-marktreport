@@ -1,0 +1,22 @@
+name: Fehler-Wächter
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '5 10 * * 1-5'   # Mo bis Fr 10:05 UTC (11:05 oder 12:05 Berlin)
+permissions:
+  contents: read
+  actions: read
+jobs:
+  wachter:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - name: Täglich prüfen (montags zusätzlich Selbsttest)
+        env:
+          GH_READ_TOKEN: ${{ secrets.GH_READ_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          if [ "$(date -u +%u)" = "1" ]; then python pipeline/wachter/wachter.py woche; else python pipeline/wachter/wachter.py; fi
