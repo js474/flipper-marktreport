@@ -39,6 +39,8 @@ def pruefe_repo(repo, f):
         f.append(finding(f"{repo}: Workflow-Läufe nicht lesbar", f"HTTP {s} auf actions/runs.", "Abruf, kein Ergebnis.", "Token-Rechte Actions: Read prüfen."))
         return
     for r in d.get("workflow_runs", []):
+        if r.get("path", "").endswith("/wachter.yml"):
+            continue  # eigener Lauf: den prüft die Claude-Aufgabe über den Laufstatus
         s2, j = get(f"repos/{repo}/actions/runs/{r['id']}/jobs")
         schritte = []
         if s2 == 200:
@@ -97,7 +99,9 @@ def alle_repos():
 
 def main():
     f = []
-    for r in alle_repos():
+    repos = alle_repos()
+    print(f"Geprüft: {len(repos)} Repos: " + ", ".join(repos))
+    for r in repos:
         pruefe_repo(r, f)
     pruefe_remix(f)
     if "woche" in sys.argv:
