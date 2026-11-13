@@ -2,7 +2,7 @@ name: Fehler-Wächter
 on:
   workflow_dispatch:
   schedule:
-    - cron: '5 10 * * 1-5'   # Mo bis Fr 10:05 UTC (11:05 oder 12:05 Berlin)
+    - cron: '23 10 * * 1-5'   # Mo bis Fr 10:23 UTC (11:23 oder 12:23 Berlin), nicht auf :05 wegen ausgefallener Startzeit
 permissions:
   contents: read
   actions: read
