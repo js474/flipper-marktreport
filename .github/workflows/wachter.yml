@@ -3,6 +3,7 @@ on:
   workflow_dispatch:
   schedule:
     - cron: '23 10 * * 1-5'   # Mo bis Fr 10:23 UTC (11:23 oder 12:23 Berlin), nicht auf :05 wegen ausgefallener Startzeit
+    - cron: '47 8 * * 1-5'    # zweite Startzeit 08:47 UTC, falls 10:23 nicht feuert
 permissions:
   contents: read
   actions: read
