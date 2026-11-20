@@ -24,6 +24,20 @@ def get(path):
 def finding(was, warum, versucht, aktion):
     return {"was": was, "warum": warum, "versucht": versucht, "johannes": aktion}
 
+def status_zeilen(repo):
+    """Letzter Lauf je Workflow als Zeile 'STATUS ...'. Beleg dafuer, dass ein frueherer Fehler wieder gruen ist."""
+    s, d = get(f"repos/{repo}/actions/runs?per_page=50")
+    if s != 200:
+        print(f"STATUS {repo} | Läufe nicht lesbar: HTTP {s}")
+        return
+    neu = {}
+    for r in d.get("workflow_runs", []):
+        if r.get("path", "").endswith("/wachter.yml") or r["name"] in neu:
+            continue
+        neu[r["name"]] = r
+    for n, r in neu.items():
+        print(f"STATUS {repo} | {n} | {r.get('conclusion') or r.get('status')} | {r['created_at']} | {r['event']}")
+
 def pruefe_repo(repo, f):
     s, d = get(f"repos/{repo}")
     if s != 200:
@@ -33,7 +47,10 @@ def pruefe_repo(repo, f):
             "Abruf mit vorhandenem Token, ohne Ergebnis.",
             "Secret GH_READ_TOKEN in js474/flipper-marktreport anlegen (Fine-grained Token, Expiration: No expiration, Repository access: All repositories, Rechte Actions, Contents, Metadata jeweils Read-only)."))
         return
-    since = (NOW - timedelta(hours=24)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    # Montags 72 Stunden, damit Fehler von Freitagabend bis Sonntag nicht durchrutschen (Lauf nur Mo bis Fr)
+    stunden = 72 if NOW.weekday() == 0 else 24
+    since = (NOW - timedelta(hours=stunden)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    status_zeilen(repo)
     s, d = get(f"repos/{repo}/actions/runs?status=failure&created=%3E%3D{since}&per_page=20")
     if s != 200:
         f.append(finding(f"{repo}: Workflow-Läufe nicht lesbar", f"HTTP {s} auf actions/runs.", "Abruf, kein Ergebnis.", "Token-Rechte Actions: Read prüfen."))
